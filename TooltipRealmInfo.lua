@@ -1,38 +1,37 @@
 
 TooltipRealmInfoDB = {};
 local addon, ns = ...;
-local L = ns.L;
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
 
-local frame, media = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
-local _LFG_LIST_TOOLTIP_LEADER = gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
-local _FRIENDS_LIST_REALM = FRIENDS_LIST_REALM.."|r(.+)";
+local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
+local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon = 1,2,3,4,5,6,7,8,9,10,11,12;
-local Code2UTC = {EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
-local DST = 0;
-local dbDefaults = {
-	battlegroup = false,
-	timezone = false,
-	rules = true,
-	locale = true
-};
+local replaceRealmNames = {["AzjolNerub"]="Azjol-Nerub",["Arakarahm"]="Arak-arahm",["Корольлич"]="Король-лич",["Aggra(Português)"]="Aggra (Português)"};
+local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
+local dbDefaults = {battlegroup=false,timezone=false,type=true,locale=true};
 local L = setmetatable({},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
 
-L["locale"] = LANGUAGE;
+--[[
+	L["Chat command list for /ttri or /tooltiprealminfo"] = "";
+	L["For options use /ttri or /tooltiprealminfo"] = "";
+	L["Hide %s in tooltip"] = "";
+	L["Realm battlegroup"] = "";
+	L["Realm language"] = "";
+	L["Realm timezone"] = "";
+	L["Realm type"] = "";
+	L["Show %s in tooltip"] = "";
+	L["tooltip line '%s' set on '%s'"] = "";
+--]]
 
 if LOCALE_deDE then
-	-- L["battlegroup"]
-	-- L["timezone"]
-	-- L["rules"]
-	-- L["Show"]
-	-- L["Hide"]
-	-- L["Chat command list for /ttri or /tooltiprealminfo"]
-	-- L["%s in tooltip"]
-	-- L["tooltip line '%s' set on '%s'"]
-	-- L["For options use /ttri or /tooltiprealminfo"]
-	-- L["AddOn loaded..."]
+elseif LOCALE_esES or LOCALE_esMX then
+elseif LOCALE_koKR then
+elseif LOCALE_ptBR or LOCALE_ptPT then 
+elseif LOCALE_ruRU then
+elseif LOCALE_zhCN then
+elseif LOCALE_zhTW then
 end
 
 ns.print=function(...)
@@ -53,8 +52,8 @@ ns.print=function(...)
 end
 
 local function realm_fix(str)
-	if str:find("%(") then
-		str = gsub(str,"("," ("); -- problem with Aggra(
+	if replaceRealmNames[str] then
+		str = replaceRealmNames[str];
 	end
 	return str;
 end
@@ -105,10 +104,13 @@ local function data_update(id, name, api_name, rules, locale, battlegroup, regio
 	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon;
 end
 
-local function AddLines(tt,realm)
-	for i,v in ipairs({ {"locale",locale}, {"rules",rules}, {"timezone",timezone}, {"battlegroup",battlegroup} })do
+local function AddLines(tt,realm,_title)
+	if not _title then
+		_title = "%s: ";
+	end
+	for i,v in ipairs({ {"locale",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]} })do
 		if TooltipRealmInfoDB[v[1]] then
-			local title,text = ("%s %s: "):format(L["Realm"],L[v[1]]),"";
+			local title,text = _title:format(v[3]),"";
 			if v[1]=="locale" then
 				local lCode = realm[v[2]]:upper();
 				if _G["LFG_LIST_LANGUAGE_"..lCode]~=nil or _G[lCode]~=nil then
@@ -127,10 +129,13 @@ local function AddLines(tt,realm)
 			if type(tt)=="string" then
 				tt = tt.."|n"..title..text;
 			else
+				locked=true;
 				tt:AddLine(title.."|cffffffff"..text.."|r");
+				locked=false;
 			end
 		end
 	end
+	return tt;
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
@@ -148,6 +153,7 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 end);
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
+	if locked then return end
 	local owner, owner_name = GameTooltip:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
@@ -157,7 +163,7 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 		local leaderName = line_str:match(_LFG_LIST_TOOLTIP_LEADER);
 		if leaderName then
 			local charName, realmName = strsplit("-",leaderName);
-			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
+			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName or myRealm)))};
 			if #realm>0 then
 				AddLines(self,realm);
 			end
@@ -166,21 +172,21 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 end);
 
 -- Friend list tooltip
---[[
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
+	if locked then return end
 	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
 			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
 			if #realm>0 then
 				FriendsTooltip.height = FriendsTooltip.height - line:GetHeight(); -- remove prev. added line height
-				AddLines(text,realm);
-				FriendsFrameTooltip_SetLine(line, anchor, text, yOffset);
+				locked=true;
+				FriendsFrameTooltip_SetLine(line, anchor, AddLines(text,realm,NORMAL_FONT_COLOR_CODE.."%s:|r "), yOffset);
+				locked=false;
 			end
 		end
 	end
 end);
---]]
 
 frame:SetScript("OnEvent",function(self,event)
 	local t = date("*t");
@@ -193,26 +199,32 @@ frame:SetScript("OnEvent",function(self,event)
 			TooltipRealmInfoDB[k]=v;
 		end
 	end
+	if TooltipRealmInfoDB.rules~=nil then
+		TooltipRealmInfoDB.type = TooltipRealmInfoDB.rules;
+		TooltipRealmInfoDB.rules = nil;
+	end
 	ns.print(L["AddOn loaded..."],"","\n",L["For options use /ttri or /tooltiprealminfo"]);
 	self:UnregisterEvent(event);
 end);
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 
 SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
-	local _print = function(key) ns.print(L["tooltip line '%s' set on '%s'"]:format(L[key],TooltipRealmInfoDB[key] and L["Show"] or L["Hide"])) end
-	local cmd, arg = strsplit(" ", cmd, 2)
-	cmd = cmd:lower()
+	local _print = function(key) ns.print(L["tooltip line '%s' set on '%s'"]:format(L[key],TooltipRealmInfoDB[key] and SHOW or HIDE)) end
+	local cmd, arg = strsplit(" ", cmd, 2);
+	cmd = cmd:lower();
 	
-	if cmd=="battlegroup" or cmd=="timezone" or cmd=="rules" or cmd=="locale" then
+	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="locale" then
 		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
 		_print(cmd);
+	elseif cmd=="id" then
+		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
 	else
 		ns.print(L["Chat command list for /ttri or /tooltiprealminfo"]);
 		for i,v in ipairs({"battlegroup","timezone","rules","locale"})do
-			ns.print("", v, "-", (TooltipRealmInfoDB[v] and L["Hide"] or L["Show"]) .." ".. L["%s in tooltip"]:format(L[v]));
+			ns.print("", v, "-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
 		end
 	end
 end
 
-SLASH_TOOLTIPREALMINFO1 = "/tooltiprealminfo"
-SLASH_TOOLTIPREALMINFO2 = "/ttri"
+SLASH_TOOLTIPREALMINFO1 = "/tooltiprealminfo";
+SLASH_TOOLTIPREALMINFO2 = "/ttri";
