@@ -166,8 +166,9 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 end);
 
 -- Friend list tooltip
+--[[
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
-	if yOffset == -4 then
+	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
 			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
@@ -179,6 +180,7 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 		end
 	end
 end);
+--]]
 
 frame:SetScript("OnEvent",function(self,event)
 	local t = date("*t");
