@@ -10,7 +10,7 @@ local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon = 1,2,3,4,5,6,7,8,9,10,11,12;
 local replaceRealmNames = {["AzjolNerub"]="Azjol-Nerub",["Arakarahm"]="Arak-arahm",["Корольлич"]="Король-лич",["Aggra(Português)"]="Aggra (Português)"};
 local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
-local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true};
+local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,loadedmessage=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
 
 -- L["timezone"]
@@ -31,6 +31,19 @@ if LOCALE_deDE then
 	L["Tooltip line '%s' is now hidden."] = "Tooltipzeile '%s' wird jetzt versteckt."
 	L["Tooltip line '%s' is now shown."] = "Tooltipzeile '%s' wird jetzt gezeigt."
 elseif LOCALE_esES or LOCALE_esMX then
+	L["AddOn loaded..."] = "Complemento cargado..."
+	L["battlegroup"] = "Grupo"
+	L["Chat command list for /ttri or /tooltiprealminfo"] = "Comandos de chat en /ttri o /tooltiprealminfo"
+	L["For options use /ttri or /tooltiprealminfo"] = "Para ver las opciones utilice /ttri o /tooltiprealminfo"
+	L["Hide %s in tooltip"] = "Ocultar %s en ventana emergente"
+	L["Realm battlegroup"] = "Grupo de servidores"
+	L["Realm language"] = "Idioma del servidor"
+	L["Realm timezone"] = "Zona horaria del servidor"
+	L["Realm type"] = "Tipo de servidor"
+	L["Show %s in tooltip"] = "Mostrar %s en ventana emergente"
+	L["timezone"] = "zona horaria"
+	L["Tooltip line '%s' is now hidden."] = "'%s' se ha ocultado de la ventana emergente."
+	L["Tooltip line '%s' is now shown."] = "'%s' ya se muestra en la ventana emergente."
 elseif LOCALE_koKR then
 elseif LOCALE_ptBR or LOCALE_ptPT then 
 elseif LOCALE_ruRU then
@@ -40,17 +53,15 @@ end
 
 ns.print=function(...)
 	local colors,t,c = {"0099ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"},{},1;
-	local strings = {...};
-	if strings[1]~="" then
-		tinsert(strings,1,addon..":");
-	end
-	for i,v in ipairs(strings) do
-		if type(v)=="string" and v:match("||c") then
-			tinsert(t,v);
-		else
-			tinsert(t,"|cff"..colors[c]..tostring(v).."|r");
-			c = c<#colors and c+1 or 1;
+	for i,v in ipairs({...}) do
+		v = tostring(v);
+		if i==1 and v~="" then
+			tinsert(t,"|cff0099ff"..addon.."|r:"); c=2;
 		end
+		if not v:match("||c") then
+			v,c = "|cff"..colors[c]..v.."|r", c<#colors and c+1 or 1;
+		end
+		tinsert(t,v);
 	end
 	print(unpack(t));
 end
@@ -128,7 +139,7 @@ local function AddLines(tt,realm,_title)
 			elseif v[2] and realm[v[2]] then
 				text = text .. realm[v[2]];
 			else 
-				print(v[2]);
+				--print(v[2]);
 			end
 			if type(tt)=="string" then
 				tt = tt.."|n"..title..text;
@@ -143,16 +154,19 @@ local function AddLines(tt,realm,_title)
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
-	local name, unit = self:GetUnit(); 
+	local name, unit, guid, realm = self:GetUnit(); 
 	if not unit then
 		mf = GetMouseFocus();
 		if mf then unit = mf.unit end
 	end
 	if unit and UnitIsPlayer(unit) then
-		local realm = {data_update(LRI:GetRealmInfoByUnit(unit))};
-		if #realm>0 then
-			AddLines(self,realm);
-		end
+		guid = UnitGUID(unit);
+	end
+	if guid then
+		realm = {data_update(LRI:GetRealmInfoByGUID(guid))};
+	end
+	if realm and #realm>0 then
+		AddLines(self,realm);
 	end
 end);
 
@@ -192,29 +206,34 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 	end
 end);
 
-frame:SetScript("OnEvent",function(self,event)
-	local t = date("*t");
-	DST = t.isdst and 1 or 0;
-	if TooltipRealmInfoDB==nil then
-		TooltipRealmInfoDB = {};
-	end
-	for k,v in pairs(dbDefaults)do
-		if TooltipRealmInfoDB[k]==nil then
-			TooltipRealmInfoDB[k]=v;
+frame:SetScript("OnEvent",function(self,event,name)
+	if event=="ADDON_LOADED" and addon==name then
+		if TooltipRealmInfoDB==nil then
+			TooltipRealmInfoDB = {};
 		end
+		for k,v in pairs(dbDefaults)do
+			if TooltipRealmInfoDB[k]==nil then
+				TooltipRealmInfoDB[k]=v;
+			end
+		end
+		if TooltipRealmInfoDB.rules~=nil then
+			TooltipRealmInfoDB.type = TooltipRealmInfoDB.rules;
+			TooltipRealmInfoDB.rules = nil;
+		end
+		if TooltipRealmInfoDB.locale~=nil then
+			TooltipRealmInfoDB.language = TooltipRealmInfoDB.locale;
+			TooltipRealmInfoDB.locale = nil;
+		end
+		if TooltipRealmInfoDB.loadedmessage then
+			ns.print(L["AddOn loaded..."],"","\n",L["For options use /ttri or /tooltiprealminfo"]);
+		end
+	elseif event=="PLAYER_LOGIN" then
+		local t = date("*t");
+		DST = t.isdst and 1 or 0;
 	end
-	if TooltipRealmInfoDB.rules~=nil then
-		TooltipRealmInfoDB.type = TooltipRealmInfoDB.rules;
-		TooltipRealmInfoDB.rules = nil;
-	end
-	if TooltipRealmInfoDB.locale~=nil then
-		TooltipRealmInfoDB.language = TooltipRealmInfoDB.locale;
-		TooltipRealmInfoDB.locale = nil;
-	end
-	ns.print(L["AddOn loaded..."],"","\n",L["For options use /ttri or /tooltiprealminfo"]);
-	self:UnregisterEvent(event);
 end);
-frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+frame:RegisterEvent("ADDON_LOADED");
+frame:RegisterEvent("PLAYER_LOGIN");
 
 SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	local _print = function(key)
@@ -226,13 +245,17 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="language" then
 		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
 		_print(cmd);
+	elseif cmd=="loadedmessage" then
+		TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
+		ns.print("'AddOn loaded...' message:",TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 	elseif cmd=="id" then
 		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
 	else
 		ns.print(L["Chat command list for /ttri or /tooltiprealminfo"]);
 		for i,v in ipairs({"battlegroup","timezone","language","type"})do
-			ns.print("", v, "-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
+			ns.print("", v, "|cffffff00-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
 		end
+		ns.print("","loadedmessage","|cffffff00-",L["Toggle 'AddOn loaded...' message"]);
 	end
 end
 
