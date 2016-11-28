@@ -162,8 +162,14 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	if unit and UnitIsPlayer(unit) then
 		guid = UnitGUID(unit);
 	end
-	if guid then
-		realm = {data_update(LRI:GetRealmInfoByGUID(guid))};
+	if tostring(guid):match("^Player%-") then
+		local _, _, _, _, _, _, _realm = GetPlayerInfoByGUID(guid);
+		if _realm == "" then
+			_realm = GetRealmName()
+		end
+		if _realm then
+			realm = {data_update(LRI:GetRealmInfo(_realm))};
+		end
 	end
 	if realm and #realm>0 then
 		AddLines(self,realm);
