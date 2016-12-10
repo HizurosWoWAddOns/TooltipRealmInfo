@@ -176,11 +176,33 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	end
 end);
 
-hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
+hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	if locked then return end
-	local owner, owner_name = GameTooltip:GetOwner();
+	local owner, owner_name = self:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
+		if not owner_name then
+			owner_name = owner:GetDebugName();
+		end
+	end
+	-- GroupFinder > ApplicantViewer > Tooltip
+	if owner_name and owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
+		local charName, realmName = strsplit("-",name);
+		local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName or myRealm)))};
+		if #realm>0 then
+			AddLines(self,realm);
+		end
+	end
+end);
+
+hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
+	if locked then return end
+	local owner, owner_name = self:GetOwner();
+	if owner then
+		owner_name = owner:GetName();
+		if not owner_name then
+			owner_name = owner:GetDebugName();
+		end
 	end
 	-- GroupFinder > SearchResult > Tooltip
 	if owner_name and owner_name:find("^LFGListSearchPanelScrollFrameButton") then
