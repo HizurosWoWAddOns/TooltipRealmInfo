@@ -9,7 +9,7 @@ local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon = 1,2,3,4,5,6,7,8,9,10,11,12;
 local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
-local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,loadedmessage=true};
+local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
 local replaceRealmNames = {
 	["Aggra(Português)"]="Aggra (Português)",
@@ -71,6 +71,7 @@ if LOCALE_deDE then
 	L["Realm language"] = "Realmsprache"
 	L["Realm timezone"] = "Realmzeitzone"
 	L["Realm type"] = "Realmtyp"
+	L["Connected realms"] = "Verbundener Realms"
 	L["Show %s in tooltip"] = "%s im Tooltip zeigen"
 	L["timezone"] = "Zeitzone"
 	L["Tooltip line '%s' is now hidden."] = "Tooltipzeile '%s' wird jetzt versteckt."
@@ -95,6 +96,7 @@ elseif LOCALE_ruRU then
 elseif LOCALE_zhCN then
 elseif LOCALE_zhTW then
 end
+L["connectedrealms"] = L["Connected realms"];
 
 ns.print=function(...)
 	local colors,t,c = {"0099ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"},{},1;
@@ -168,7 +170,7 @@ local function AddLines(tt,realm,_title)
 	if not _title then
 		_title = "%s: ";
 	end
-	for i,v in ipairs({ {"language",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]} })do
+	for i,v in ipairs({ {"language",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]}, {"connectedrealms",connections,L["Connected realms"]} })do
 		if TooltipRealmInfoDB[v[1]] then
 			local title,text = _title:format(v[3]),"";
 			if v[1]=="language" then
@@ -181,17 +183,39 @@ local function AddLines(tt,realm,_title)
 				else
 					text = text .. realm[v[2]].."?";
 				end
+			elseif v[1]=="connectedrealms" then
+				local names,color = {},"ffffff";
+				if realm[v[2]] and #realm[v[2]]>0 then
+					for i=1,#realm[v[2]] do
+						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i]);
+						if realm_name == myRealm then
+							color="00ff00";
+						end
+						tinsert(names,realm_name);
+					end
+					text = text .. table.concat(names,",|n");
+				end
+				if type(tt)~="string" and #names>0 then
+					table.sort(names);
+					for i,v in pairs(names) do
+						tt:AddDoubleLine(title,"|cff"..color..v.."|r");
+						title = " ";
+					end
+					text = "";
+				end
 			elseif v[2] and realm[v[2]] then
 				text = text .. realm[v[2]];
 			else 
 				--print(v[2]);
 			end
-			if type(tt)=="string" then
-				tt = tt.."|n"..title..text;
-			else
-				locked=true;
-				tt:AddLine(title.."|cffffffff"..text.."|r");
-				locked=false;
+			if text:len()>0 then
+				if type(tt)=="string" then
+					tt = tt.."|n"..title..text;
+				else
+					locked=true;
+					tt:AddDoubleLine(title,"|cffffffff"..text.."|r");
+					locked=false;
+				end
 			end
 		end
 	end
@@ -315,7 +339,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	local cmd, arg = strsplit(" ", cmd, 2);
 	cmd = cmd:lower();
 	
-	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="language" then
+	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
 		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
 		_print(cmd);
 	elseif cmd=="loadedmessage" then
@@ -325,7 +349,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
 	else
 		ns.print(L["Chat command list for /ttri or /tooltiprealminfo"]);
-		for i,v in ipairs({"battlegroup","timezone","language","type"})do
+		for i,v in ipairs({"battlegroup","timezone","language","type","connectedrealms"})do
 			ns.print("", v, "|cffffff00-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
 		end
 		ns.print("","loadedmessage","|cffffff00-",L["Toggle 'AddOn loaded...' message"]);
