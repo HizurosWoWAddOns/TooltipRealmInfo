@@ -8,10 +8,55 @@ local LRI = LibStub("LibRealmInfo");
 local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon = 1,2,3,4,5,6,7,8,9,10,11,12;
-local replaceRealmNames = {["AzjolNerub"]="Azjol-Nerub",["Arakarahm"]="Arak-arahm",["Корольлич"]="Король-лич",["Aggra(Português)"]="Aggra (Português)"};
 local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
 local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,loadedmessage=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
+local replaceRealmNames = {
+	["Aggra(Português)"]="Aggra (Português)",
+	["AhnQiraj"] = "Ahn'Qiraj",
+	["AlAkir"] = "Al'Akir",
+	["AmanThul"] = "Aman'Thul",
+	["Anubarak"] = "Anub'arak",
+	["Arakarahm"]="Arak-arahm",
+	["AzjolNerub"]="Azjol-Nerub",
+	["BladesEdge"] = "Blade's Edge",
+	["CThun"] = "C'Thun",
+	["Chogall"] = "Cho'gall",
+	["DathRemar"] = "Dath'Remar",
+	["DrakTharon"] = "Drak'Tharon",
+	["Drakthul"] = "Drak'thul",
+	["DrekThar"] = "Drek'Thar",
+	["EldreThalas"] = "Eldre'Thalas",
+	["Guldan"] = "Gul'dan",
+	["JubeiThos"] = "Jubei'Thos",
+	["Kaelthas"] = "Kael'thas",
+	["KelThuzad"] = "Kel'Thuzad",
+	["Khazgoroth"] = "Khaz'goroth",
+	["Kiljaeden"] = "Kil'jaeden",
+	["Korgall"] = "Kor'gall",
+	["Kragjin"] = "Krag'jin",
+	["LightningsBlade"] = "Lightning's Blade",
+	["MalGanis"] = "Mal'Ganis",
+	["MokNathal"] = "Mok'Nathal",
+	["Mugthol"] = "Mug'thol",
+	["Nerathor"] = "Nera'thor",
+	["Nerzhul"] = "Ner'zhul",
+	["PozzodellEternità"] = "Pozzo dell'Eternità",
+	["QuelThalas"] = "Quel'Thalas",
+	["Queldorei"] = "Quel'dorei",
+	["Senjin"] = "Sen'jin",
+	["Shendralar"] = "Shen'dralar",
+	["Shuhalo"] = "Shu'halo",
+	["TheShatar"] = "The Sha'tar",
+	["ThrokFeroth"] = "Throk'Feroth",
+	["TwilightsHammer"] = "Twilight's Hammer",
+	["UnGoro"] = "Un'Goro",
+	["Veklor"] = "Vek'lor",
+	["Veknilash"] = "Vek'nilash",
+	["Voljin"] = "Vol'jin",
+	["Zuljin"] = "Zul'jin",
+	["Корольлич"]="Король-лич",
+};
 
 -- L["timezone"]
 -- L["battlegroup"]
