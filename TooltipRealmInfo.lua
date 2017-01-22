@@ -7,10 +7,11 @@ local LRI = LibStub("LibRealmInfo");
 
 local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
-local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon = 1,2,3,4,5,6,7,8,9,10,11,12;
+local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
 local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
-local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true};
+local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true,countryflag="languageline",finder_counryflag=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
+local tooltipLines = { {"language",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]}, {"connectedrealms",connections,L["Connected realms"]} };
 local replaceRealmNames = {
 	["Aggra(Português)"]="Aggra (Português)",
 	["AhnQiraj"] = "Ahn'Qiraj",
@@ -113,6 +114,13 @@ ns.print=function(...)
 	print(unpack(t));
 end
 
+ns.debug = function() end
+if GetAddOnMetadata(addon,"Version")=="@project-version@" then
+	ns.debug = function(...)
+		ns.print("debug",...);
+	end
+end
+
 local function realm_fix(str)
 	if replaceRealmNames[str] then
 		str = replaceRealmNames[str];
@@ -120,11 +128,12 @@ local function realm_fix(str)
 	return str;
 end
 
-local function data_update(id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon)
+local function data_update(id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name)
 	if not id then return end
 
 	-- add icon
-	icon = "|T"..media..locale..":0:2|t";
+	local iconfile = media..locale;
+	local iconstr = "|T"..iconfile..":0:2|t";
 
 	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
 	if locale == "ptPT" then
@@ -163,22 +172,30 @@ local function data_update(id, name, api_name, rules, locale, battlegroup, regio
 		timezone = "UTC" .. (timezone<0 and "-" or "+") .. timezone;
 	end
 
-	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, icon;
+	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile;
 end
 
 local function AddLines(tt,realm,_title)
 	if not _title then
 		_title = "%s: ";
 	end
-	for i,v in ipairs({ {"language",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]}, {"connectedrealms",connections,L["Connected realms"]} })do
+
+	if realm[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
+		local ttName = tt:GetName();
+		if ttName then
+			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realm[iconstr]);
+		end
+	end
+
+	for i,v in ipairs(tooltipLines)do
 		if TooltipRealmInfoDB[v[1]] then
 			local title,text = _title:format(v[3]),"";
 			if v[1]=="language" then
 				local lCode = realm[v[2]]:upper();
 				if _G["LFG_LIST_LANGUAGE_"..lCode]~=nil or _G[lCode]~=nil then
 					text = text .. (_G["LFG_LIST_LANGUAGE_"..lCode] or _G[lCode]);
-					if realm[icon] then
-						text = text .. realm[icon];
+					if realm[iconstr] and TooltipRealmInfoDB.countryflag=="languageline" then
+						text = text .. realm[iconstr];
 					end
 				else
 					text = text .. realm[v[2]].."?";
@@ -205,8 +222,6 @@ local function AddLines(tt,realm,_title)
 				end
 			elseif v[2] and realm[v[2]] then
 				text = text .. realm[v[2]];
-			else 
-				--print(v[2]);
 			end
 			if text:len()>0 then
 				if type(tt)=="string" then
@@ -219,10 +234,16 @@ local function AddLines(tt,realm,_title)
 			end
 		end
 	end
+
+	if realm[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
+		tt:AddLine(realm[iconstr]);
+	end
+
 	return tt;
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+	if not GameTooltip:IsShown() then return end
 	local name, unit, guid, realm = self:GetUnit(); 
 	if not unit then
 		mf = GetMouseFocus();
@@ -246,6 +267,7 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 end);
 
 hooksecurefunc(GameTooltip,"SetText",function(self,name)
+	if not GameTooltip:IsShown() then return end
 	if locked then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
@@ -265,6 +287,7 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 end);
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
+	if not GameTooltip:IsShown() then return end
 	if locked then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
@@ -303,6 +326,95 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 	end
 end);
 
+-- Groupfinder applicants
+hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
+	if not TooltipRealmInfoDB.finder_counryflag then return end
+	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
+	local charName, realmName = strsplit("-",name);
+	if realmName then
+		local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
+		if #realm>0 then
+			member.Name:SetText(realm[iconstr]..member.Name:GetText());
+		end
+	end
+end);
+
+local options = {
+	type = "group",
+	name = addon,
+	args = {
+		tooltip = {
+			type = "group", order = 1,
+			name = L["Tooltip"],
+			inline = true,
+			args = {
+				battlegroup = {
+					type = "toggle", order = 1,
+					name = L["Realm battlegroup"],
+					get = function() return TooltipRealmInfoDB.battlegroup; end,
+					set = function(_,v) TooltipRealmInfoDB.battlegroup = v; end
+				},
+				timezone = {
+					type = "toggle", order = 2,
+					name = L["Realm timezone"],
+					get = function() return TooltipRealmInfoDB.timezone; end,
+					set = function(_,v) TooltipRealmInfoDB.timezone = v; end
+				},
+				type = {
+					type = "toggle", order = 3,
+					name = L["Realm type"],
+					get = function() return TooltipRealmInfoDB.type; end,
+					set = function(_,v) TooltipRealmInfoDB.type = v; end
+				},
+				language = {
+					type = "toggle", order = 4,
+					name = L["Realm language"],
+					get = function() return TooltipRealmInfoDB.language; end,
+					set = function(_,v) TooltipRealmInfoDB.language = v; end
+				},
+				connectedrealms = {
+					type = "toggle", order = 5,
+					name = L["Connected realms"],
+					get = function() return TooltipRealmInfoDB.connectedrealms; end,
+					set = function(_,v) TooltipRealmInfoDB.connectedrealms = v; end
+				},
+				countryflag = {
+					type = "select", order = 6, width = "double",
+					name = L["Country flag"],
+					desc = L["Display the country flag without text on the left side in tooltip"],
+					values = {
+						languageline = L["Behind language in line 'Realm language'"],
+						charactername = L["Behind the character name"].." ("..L["Currently doesn't work with TipTac"]..")",
+						ownline = L["In own tooltip line on the left site"],
+						none = ADDON_DISABLED
+					},
+					get = function() return TooltipRealmInfoDB.countryflag; end,
+					set = function(_,v) TooltipRealmInfoDB.countryflag = v; end
+				}
+			}
+		},
+		groupfinder = {
+			type = "group", order = 2,
+			name = LFGLIST_NAME,
+			inline = true,
+			args = {
+				countryflag = {
+					type = "toggle",
+					name = L["Country flag"],
+					desc = L["Prepend country flag on character name"],
+					get = function() return TooltipRealmInfoDB.finder_counryflag; end,
+					set = function(_,v) TooltipRealmInfoDB.finder_counryflag = v; end
+				}
+			}
+		}
+	}
+};
+
+local function RegisterOptionPanel()
+	LibStub("AceConfig-3.0"):RegisterOptionsTable(addon, options);
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
+end
+
 frame:SetScript("OnEvent",function(self,event,name)
 	if event=="ADDON_LOADED" and addon==name then
 		if TooltipRealmInfoDB==nil then
@@ -321,6 +433,7 @@ frame:SetScript("OnEvent",function(self,event,name)
 			TooltipRealmInfoDB.language = TooltipRealmInfoDB.locale;
 			TooltipRealmInfoDB.locale = nil;
 		end
+		RegisterOptionPanel();
 		if TooltipRealmInfoDB.loadedmessage then
 			ns.print(L["AddOn loaded..."],"","\n",L["For options use /ttri or /tooltiprealminfo"]);
 		end
