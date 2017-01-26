@@ -11,7 +11,7 @@ local id, name, api_name, rules, locale, battlegroup, region, timezone, connecti
 local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
 local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true,countryflag="languageline",finder_counryflag=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
-local tooltipLines = { {"language",locale,L["Realm language"]}, {"type",rules,L["Realm type"]}, {"timezone",timezone,L["Realm timezone"]}, {"battlegroup",battlegroup,L["Realm battlegroup"]}, {"connectedrealms",connections,L["Connected realms"]} };
+local tooltipLines = { {"language",locale,"Realm language"}, {"type",rules,"Realm type"}, {"timezone",timezone,"Realm timezone"}, {"battlegroup",battlegroup,"Realm battlegroup"}, {"connectedrealms",connections,"Connected realms"} };
 local replaceRealmNames = {
 	["Aggra(Português)"]="Aggra (Português)",
 	["AhnQiraj"] = "Ahn'Qiraj",
@@ -189,7 +189,7 @@ local function AddLines(tt,realm,_title)
 
 	for i,v in ipairs(tooltipLines)do
 		if TooltipRealmInfoDB[v[1]] then
-			local title,text = _title:format(v[3]),"";
+			local title,text = _title:format(L[v[3]]),"";
 			if v[1]=="language" then
 				local lCode = realm[v[2]]:upper();
 				if _G["LFG_LIST_LANGUAGE_"..lCode]~=nil or _G[lCode]~=nil then
