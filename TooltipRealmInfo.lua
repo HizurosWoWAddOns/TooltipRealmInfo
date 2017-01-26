@@ -460,12 +460,16 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		ns.print("'AddOn loaded...' message:",TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 	elseif cmd=="id" then
 		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
+	elseif cmd=="config" then
+		InterfaceOptionsFrame_OpenToCategory(addon);
+		InterfaceOptionsFrame_OpenToCategory(addon);
 	else
 		ns.print(L["Chat command list for /ttri or /tooltiprealminfo"]);
 		for i,v in ipairs({"battlegroup","timezone","language","type","connectedrealms"})do
 			ns.print("", v, "|cffffff00-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
 		end
 		ns.print("","loadedmessage","|cffffff00-",L["Toggle 'AddOn loaded...' message"]);
+		ns.print("","config","|cffffff00-",L["Open option panel"]);
 	end
 end
 
