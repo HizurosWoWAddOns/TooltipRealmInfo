@@ -243,7 +243,6 @@ local function AddLines(tt,realm,_title)
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
-	if not GameTooltip:IsShown() then return end
 	local name, unit, guid, realm = self:GetUnit(); 
 	if not unit then
 		mf = GetMouseFocus();
@@ -267,7 +266,6 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 end);
 
 hooksecurefunc(GameTooltip,"SetText",function(self,name)
-	if not GameTooltip:IsShown() then return end
 	if locked then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
@@ -287,7 +285,6 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 end);
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
-	if not GameTooltip:IsShown() then return end
 	if locked then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
