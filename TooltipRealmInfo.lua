@@ -64,19 +64,25 @@ local replaceRealmNames = {
 
 if LOCALE_deDE then
 	L["AddOn loaded..."] = "Addon geladen..."
+	L["'AddOn loaded...' message:"] = "'Addon geladen...' Nachricht:"
 	L["battlegroup"] = "Schlachtgruppe"
 	L["Chat command list for /ttri or /tooltiprealminfo"] = "Chatbefehlsliste für /ttri oder /tooltiprealminfo"
+	L["Connected realms"] = "Verbundene Realms"
+	L["Country flag"] = "Landesflagge"
+	L["Currently doesn't work with TipTac"] = "Funktioniert zur Zeit nicht mit TipTac"
+	L["Display the country flag without text on the left side in tooltip"] = "Zeige Landesflagge ohne Text auf der rechten Seite im Tooltip"
 	L["For options use /ttri or /tooltiprealminfo"] = "Gib /ttri oder /tooltiprealminfo ein, um zu den Optionen zu gelangen"
 	L["Hide %s in tooltip"] = "%s im Tooltip verstecken"
+	L["In own tooltip line on the left site"] = "In eigener Tooltipzeile auf der rechten Seite"
+	L["Open option panel"] = "Öffne Optionpanel"
 	L["Realm battlegroup"] = "Realm Schlachtgruppe"
 	L["Realm language"] = "Realmsprache"
 	L["Realm timezone"] = "Realmzeitzone"
 	L["Realm type"] = "Realmtyp"
-	L["Connected realms"] = "Verbundener Realms"
 	L["Show %s in tooltip"] = "%s im Tooltip zeigen"
 	L["timezone"] = "Zeitzone"
-	L["Tooltip line '%s' is now hidden."] = "Tooltipzeile '%s' wird jetzt versteckt."
-	L["Tooltip line '%s' is now shown."] = "Tooltipzeile '%s' wird jetzt gezeigt."
+	L["Tooltip line '%s' is now hidden"] = "Tooltipzeile '%s' wird jetzt versteckt"
+	L["Tooltip line '%s' is now shown"] = "Tooltipzeile '%s' wird jetzt gezeigt"
 elseif LOCALE_esES or LOCALE_esMX then
 	L["AddOn loaded..."] = "Complemento cargado..."
 	L["battlegroup"] = "Grupo"
@@ -89,8 +95,8 @@ elseif LOCALE_esES or LOCALE_esMX then
 	L["Realm type"] = "Tipo de servidor"
 	L["Show %s in tooltip"] = "Mostrar %s en ventana emergente"
 	L["timezone"] = "zona horaria"
-	L["Tooltip line '%s' is now hidden."] = "'%s' se ha ocultado de la ventana emergente."
-	L["Tooltip line '%s' is now shown."] = "'%s' ya se muestra en la ventana emergente."
+	L["Tooltip line '%s' is now hidden"] = "'%s' se ha ocultado de la ventana emergente"
+	L["Tooltip line '%s' is now shown"] = "'%s' ya se muestra en la ventana emergente"
 elseif LOCALE_koKR then
 elseif LOCALE_ptBR or LOCALE_ptPT then 
 elseif LOCALE_ruRU then
@@ -454,7 +460,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		_print(cmd);
 	elseif cmd=="loadedmessage" then
 		TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
-		ns.print("'AddOn loaded...' message:",TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
+		ns.print(L["'AddOn loaded...' message:"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 	elseif cmd=="id" then
 		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
 	elseif cmd=="config" then
