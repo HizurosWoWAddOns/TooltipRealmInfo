@@ -12,102 +12,199 @@ local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
 local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true,countryflag="languageline",finder_counryflag=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
 local tooltipLines = { {"language",locale,"Realm language"}, {"type",rules,"Realm type"}, {"timezone",timezone,"Realm timezone"}, {"battlegroup",battlegroup,"Realm battlegroup"}, {"connectedrealms",connections,"Connected realms"} };
-local replaceRealmNames = {
-	["Aggra(Português)"]="Aggra (Português)",
-	["AhnQiraj"] = "Ahn'Qiraj",
-	["AlAkir"] = "Al'Akir",
+local replaceRealmNames,region = { -- <api> = <LibRealmInfo compatible>
+	["AeriePeak"] = "Aerie Peak",
+	["AltarofStorms"] = "Altar of Storms",
+	["AlteracMountains"] = "Alterac Mountains",
 	["AmanThul"] = "Aman'Thul",
 	["Anubarak"] = "Anub'arak",
-	["Arakarahm"]="Arak-arahm",
-	["AzjolNerub"]="Azjol-Nerub",
+	["Area52"] = "Area 52",
+	["ArgentDawn"] = "Argent Dawn",
+	["BlackDragonflight"] = "Black Dragonflight",
+	["BlackwaterRaiders"] = "Blackwater Raiders",
+	["BlackwingLair"] = "Blackwing Lair",
 	["BladesEdge"] = "Blade's Edge",
-	["CThun"] = "C'Thun",
+	["BleedingHollow"] = "Bleeding Hollow",
+	["BloodFurnace"] = "Blood Furnace",
+	["BoreanTundra"] = "Borean Tundra",
+	["BurningBlade"] = "Burning Blade",
+	["BurningLegion"] = "Burning Legion",
+	["CenarionCircle"] = "Cenarion Circle",
 	["Chogall"] = "Cho'gall",
+	["DarkIron"] = "Dark Iron",
 	["DathRemar"] = "Dath'Remar",
+	["DemonSoul"] = "Demon Soul",
 	["DrakTharon"] = "Drak'Tharon",
 	["Drakthul"] = "Drak'thul",
-	["DrekThar"] = "Drek'Thar",
+	["EarthenRing"] = "Earthen Ring",
+	["EchoIsles"] = "Echo Isles",
 	["EldreThalas"] = "Eldre'Thalas",
+	["EmeraldDream"] = "Emerald Dream",
+	["GrizzlyHills"] = "Grizzly Hills",
 	["Guldan"] = "Gul'dan",
 	["JubeiThos"] = "Jubei'Thos",
 	["Kaelthas"] = "Kael'thas",
 	["KelThuzad"] = "Kel'Thuzad",
+	["KhazModan"] = "Khaz Modan",
 	["Khazgoroth"] = "Khaz'goroth",
 	["Kiljaeden"] = "Kil'jaeden",
-	["Korgall"] = "Kor'gall",
-	["Kragjin"] = "Krag'jin",
+	["KirinTor"] = "Kirin Tor",
+	["KulTiras"] = "Kul Tiras",
+	["LaughingSkull"] = "Laughing Skull",
 	["LightningsBlade"] = "Lightning's Blade",
 	["MalGanis"] = "Mal'Ganis",
 	["MokNathal"] = "Mok'Nathal",
+	["MoonGuard"] = "Moon Guard",
 	["Mugthol"] = "Mug'thol",
-	["Nerathor"] = "Nera'thor",
 	["Nerzhul"] = "Ner'zhul",
-	["PozzodellEternità"] = "Pozzo dell'Eternità",
 	["QuelThalas"] = "Quel'Thalas",
 	["Queldorei"] = "Quel'dorei",
+	["ScarletCrusade"] = "Scarlet Crusade",
 	["Senjin"] = "Sen'jin",
-	["Shendralar"] = "Shen'dralar",
+	["ShadowCouncil"] = "Shadow Council",
+	["ShatteredHalls"] = "Shattered Halls",
+	["ShatteredHand"] = "Shattered Hand",
 	["Shuhalo"] = "Shu'halo",
+	["SilverHand"] = "Silver Hand",
+	["SistersofElune"] = "Sisters of Elune",
+	["SteamwheedleCartel"] = "Steamwheedle Cartel",
+	["TheForgottenCoast"] = "The Forgotten Coast",
+	["TheScryers"] = "The Scryers",
+	["TheUnderbog"] = "The Underbog",
+	["TheVentureCo"] = "The Venture Co",
+	["ThoriumBrotherhood"] = "Thorium Brotherhood",
+	["TolBarad"] = "Tol Barad",
+	["TwistingNether"] = "Twisting Nether",
+	["Veknilash"] = "Vek'nilash",
+	["WyrmrestAccord"] = "Wyrmrest Accord",
+	["Zuljin"] = "Zul'jin",
+	["AeriePeak"] = "Aerie Peak",
+	["AggraPortuguês"] = "Aggra (Português)",
+	["AhnQiraj"] = "Ahn'Qiraj",
+	["AlAkir"] = "Al'Akir",
+	["AmanThul"] = "Aman'Thul",
+	["Anubarak"] = "Anub'arak",
+	["Area52"] = "Area 52",
+	["ArgentDawn"] = "Argent Dawn",
+	["Ясеневыйлес"] = "Ясеневый лес",
+	["ЧерныйШрам"] = "Черный Шрам",
+	["BladesEdge"] = "Blade's Edge",
+	["Пиратскаябухта"] = "Пиратская бухта",
+	["Борейскаятундра"] = "Борейская тундра",
+	["BronzeDragonflight"] = "Bronze Dragonflight",
+	["BurningBlade"] = "Burning Blade",
+	["BurningLegion"] = "Burning Legion",
+	["BurningSteppes"] = "Burning Steppes",
+	["CThun"] = "C'Thun",
+	["ChamberofAspects"] = "Chamber of Aspects",
+	["Chantséternels"] = "Chants éternels",
+	["Chogall"] = "Cho'gall",
+	["ColinasPardas"] = "Colinas Pardas",
+	["ConfrérieduThorium"] = "Confrérie du Thorium",
+	["ConseildesOmbres"] = "Conseil des Ombres",
+	["CultedelaRivenoire"] = "Culte de la Rive noire",
+	["DarkmoonFaire"] = "Darkmoon Faire",
+	["DasKonsortium"] = "Das Konsortium",
+	["DasSyndikat"] = "Das Syndikat",
+	["СтражСмерти"] = "Страж Смерти",
+	["ТкачСмерти"] = "Ткач Смерти",
+	["DefiasBrotherhood"] = "Defias Brotherhood",
+	["DerMithrilorden"] = "Der Mithrilorden",
+	["DerRatvonDalaran"] = "Der Rat von Dalaran",
+	["DerabyssischeRat"] = "Der abyssische Rat",
+	["DieAldor"] = "Die Aldor",
+	["DieArguswacht"] = "Die Arguswacht",
+	["DieNachtwache"] = "Die Nachtwache",
+	["DieSilberneHand"] = "Die Silberne Hand",
+	["DieTodeskrallen"] = "Die Todeskrallen",
+	["DieewigeWacht"] = "Die ewige Wacht",
+	["Drakthul"] = "Drak'thul",
+	["DrekThar"] = "Drek'Thar",
+	["DunModr"] = "Dun Modr",
+	["DunMorogh"] = "Dun Morogh",
+	["EarthenRing"] = "Earthen Ring",
+	["EldreThalas"] = "Eldre'Thalas",
+	["EmeraldDream"] = "Emerald Dream",
+	["ВечнаяПесня"] = "Вечная Песня",
+	["FestungderStürme"] = "Festung der Stürme",
+	["GrimBatol"] = "Grim Batol",
+	["Guldan"] = "Gul'dan",
+	["Ревущийфьорд"] = "Ревущий фьорд",
+	["Kaelthas"] = "Kael'thas",
+	["KelThuzad"] = "Kel'Thuzad",
+	["KhazModan"] = "Khaz Modan",
+	["Khazgoroth"] = "Khaz'goroth",
+	["Kiljaeden"] = "Kil'jaeden",
+	["KirinTor"] = "Kirin Tor",
+	["Korgall"] = "Kor'gall",
+	["Kragjin"] = "Krag'jin",
+	["KulTiras"] = "Kul Tiras",
+	["KultderVerdammten"] = "Kult der Verdammten",
+	["LaCroisadeécarlate"] = "La Croisade écarlate",
+	["LaughingSkull"] = "Laughing Skull",
+	["LesClairvoyants"] = "Les Clairvoyants",
+	["LesSentinelles"] = "Les Sentinelles",
+	["Корольлич"] = "Король-лич",
+	["LightningsBlade"] = "Lightning's Blade",
+	["LosErrantes"] = "Los Errantes",
+	["MalGanis"] = "Mal'Ganis",
+	["MarécagedeZangar"] = "Marécage de Zangar",
+	["Mugthol"] = "Mug'thol",
+	["Nerzhul"] = "Ner'zhul",
+	["Nerathor"] = "Nera'thor",
+	["PozzodellEternità"] = "Pozzo dell'Eternità",
+	["QuelThalas"] = "Quel'Thalas",
+	["ScarshieldLegion"] = "Scarshield Legion",
+	["Senjin"] = "Sen'jin",
+	["ShatteredHalls"] = "Shattered Halls",
+	["ShatteredHand"] = "Shattered Hand",
+	["Shendralar"] = "Shen'dralar",
+	["СвежевательДуш"] = "Свежеватель Душ",
+	["SteamwheedleCartel"] = "Steamwheedle Cartel",
+	["TarrenMill"] = "Tarren Mill",
+	["Templenoir"] = "Temple noir",
+	["TheMaelstrom"] = "The Maelstrom",
 	["TheShatar"] = "The Sha'tar",
+	["TheVentureCo"] = "The Venture Co",
 	["ThrokFeroth"] = "Throk'Feroth",
 	["TwilightsHammer"] = "Twilight's Hammer",
+	["TwistingNether"] = "Twisting Nether",
 	["UnGoro"] = "Un'Goro",
 	["Veklor"] = "Vek'lor",
 	["Veknilash"] = "Vek'nilash",
 	["Voljin"] = "Vol'jin",
-	["Zuljin"] = "Zul'jin",
-	["Корольлич"]="Король-лич",
+	["ZirkeldesCenarius"] = "Zirkel des Cenarius",
+	["Zuljin"] = "Zul'jin"
 };
 
 -- L["timezone"]
 -- L["battlegroup"]
 
+-- Hi. This addon needs your help for localization. :)
+-- https://wow.curseforge.com/projects/tooltiprealminfo/localization
+
 if LOCALE_deDE then
-	L["AddOn loaded..."] = "Addon geladen..."
-	L["'AddOn loaded...' message:"] = "'Addon geladen...' Nachricht:"
-	L["battlegroup"] = "Schlachtgruppe"
-	L["Behind language in line 'Realm language'"] = "Hinter der Sprache in der Zeile Realmsprache"
-	L["Behind the character name"] = "Hinter dem Charakternamen"
-	L["Chat command list for /ttri or /tooltiprealminfo"] = "Chatbefehlsliste für /ttri oder /tooltiprealminfo"
-	L["Connected realms"] = "Verbundene Realms"
-	L["Country flag"] = "Landesflagge"
-	L["Currently doesn't work with TipTac"] = "Funktioniert zurzeit nicht mit TipTac"
-	L["Display the country flag without text on the left side in tooltip"] = "Zeige Landesflagge ohne Text auf der rechten Seite im Tooltip"
-	L["For options use /ttri or /tooltiprealminfo"] = "Gib /ttri oder /tooltiprealminfo ein, um zu den Optionen zu gelangen"
-	L["Hide %s in tooltip"] = "%s im Tooltip verstecken"
-	L["In own tooltip line on the left site"] = "In eigener Tooltipzeile auf der rechten Seite"
-	L["Open option panel"] = "Öffne Optionpanel"
-	L["Prepend country flag on character name"] = "Die Landesflagge dem Charakternamen voranstellen"
-	L["Realm battlegroup"] = "Realm Schlachtgruppe"
-	L["Realm language"] = "Realmsprache"
-	L["Realm timezone"] = "Realmzeitzone"
-	L["Realm type"] = "Realmtyp"
-	L["Show %s in tooltip"] = "%s im Tooltip zeigen"
-	L["timezone"] = "Zeitzone"
-	L["Toggle 'AddOn loaded...' message"] = "Die Nachricht \"Addon geladen\" ein-/ausschalten"
-	L["Tooltip"] = "Tooltip"
-	L["Tooltip line '%s' is now hidden"] = "Tooltipzeile '%s' wird jetzt versteckt"
-	L["Tooltip line '%s' is now shown"] = "Tooltipzeile '%s' wird jetzt gezeigt"
-elseif LOCALE_esES or LOCALE_esMX then
-	L["AddOn loaded..."] = "Complemento cargado..."
-	L["battlegroup"] = "Grupo"
-	L["Chat command list for /ttri or /tooltiprealminfo"] = "Comandos de chat en /ttri o /tooltiprealminfo"
-	L["For options use /ttri or /tooltiprealminfo"] = "Para ver las opciones utilice /ttri o /tooltiprealminfo"
-	L["Hide %s in tooltip"] = "Ocultar %s en ventana emergente"
-	L["Realm battlegroup"] = "Grupo de servidores"
-	L["Realm language"] = "Idioma del servidor"
-	L["Realm timezone"] = "Zona horaria del servidor"
-	L["Realm type"] = "Tipo de servidor"
-	L["Show %s in tooltip"] = "Mostrar %s en ventana emergente"
-	L["timezone"] = "zona horaria"
-	L["Tooltip line '%s' is now hidden"] = "'%s' se ha ocultado de la ventana emergente"
-	L["Tooltip line '%s' is now shown"] = "'%s' ya se muestra en la ventana emergente"
+	--@localization(locale="deDE", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
+elseif LOCALE_esES then
+	--@localization(locale="esES", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
+elseif LOCALE_esMX then
+	--@localization(locale="esMX", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
+elseif LOCALE_frFR then
+	--@localization(locale="frFR", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
+elseif LOCALE_itIT then
+	--@localization(locale="itIT", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 elseif LOCALE_koKR then
-elseif LOCALE_ptBR or LOCALE_ptPT then 
+	--@localization(locale="koKR", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
+elseif LOCALE_ptBR then
+	--@localization(locale="ptBR", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 elseif LOCALE_ruRU then
+	--@localization(locale="ruRU", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 elseif LOCALE_zhCN then
+	--@localization(locale="zhCN", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 elseif LOCALE_zhTW then
+	--@localization(locale="zhTW", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 end
+
 L["connectedrealms"] = L["Connected realms"];
 
 ns.print=function(...)
@@ -132,15 +229,29 @@ if GetAddOnMetadata(addon,"Version")=="@project-version@" then
 	end
 end
 
-local function realm_fix(str)
-	if replaceRealmNames[str] then
-		str = replaceRealmNames[str];
+local function GetRealmInfo(realm)
+	ns.debug("<GRI>",1,tostring(realm));
+	if not realm or (type(realm)=="string" and realm:len()==0) then
+		realm = myRealm;
 	end
-	return str;
-end
+	ns.debug("<GRI>",2,tostring(realm));
+	if replaceRealmNames[realm] then
+		realm = replaceRealmNames[realm];
+	end
+	ns.debug("<GRI>",3,tostring(realm));
 
-local function data_update(id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name)
-	if not id then return end
+	if not LRI:GetCurrentRegion() then
+		region = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
+	end
+	ns.debug("<GRI>",4,tostring(region));
+
+	local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name = LRI:GetRealmInfo(realm,region);
+
+	ns.debug("<GRI>",5,tostring(id));
+
+	if not id then
+		return;
+	end
 
 	-- add icon
 	local iconfile = media..locale;
@@ -183,7 +294,7 @@ local function data_update(id, name, api_name, rules, locale, battlegroup, regio
 		timezone = "UTC" .. (timezone<0 and "-" or "+") .. timezone;
 	end
 
-	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile;
+	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name;
 end
 
 local function AddLines(tt,realm,_title)
@@ -215,7 +326,7 @@ local function AddLines(tt,realm,_title)
 				local names,color = {},"ffffff";
 				if realm[v[2]] and #realm[v[2]]>0 then
 					for i=1,#realm[v[2]] do
-						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i]);
+						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],region);
 						if realm_name == myRealm then
 							color="00ff00";
 						end
@@ -225,9 +336,25 @@ local function AddLines(tt,realm,_title)
 				end
 				if type(tt)~="string" and #names>0 then
 					table.sort(names);
+					local flat = false;
+					if #names>4 then
+						flat = {};
+					end
 					for i,v in pairs(names) do
-						tt:AddDoubleLine(title,"|cff"..color..v.."|r");
-						title = " ";
+						v = "|cff"..color..v.."|r";
+						if flat then
+							if title then
+								tt:AddLine(title);
+								title = nil;
+							end
+							tinsert(flat,v);
+						else
+							tt:AddDoubleLine(title,v);
+							title = " ";
+						end
+					end
+					if flat then
+						tt:AddLine(table.concat(flat,", "),1,1,1,1);
 					end
 					text = "";
 				end
@@ -254,25 +381,23 @@ local function AddLines(tt,realm,_title)
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
-	local name, unit, guid, realm = self:GetUnit(); 
+	local name, unit, guid, realm = self:GetUnit();
 	if not unit then
 		local mf = GetMouseFocus();
-		if mf then unit = mf.unit end
+		if mf and mf.unit then
+			unit = mf.unit;
+		end
 	end
 	if unit and UnitIsPlayer(unit) then
 		guid = UnitGUID(unit);
-	end
-	if tostring(guid):match("^Player%-") then
-		local _, _, _, _, _, _, _realm = GetPlayerInfoByGUID(guid);
-		if _realm == "" then
-			_realm = GetRealmName()
+		if tostring(guid):match("^Player%-") then
+			local _, _, _, _, _, _, _realm = GetPlayerInfoByGUID(guid);
+			realm = {GetRealmInfo(_realm)};
 		end
-		if _realm then
-			realm = {data_update(LRI:GetRealmInfo(_realm))};
+
+		if realm and #realm>0 then
+			AddLines(self,realm);
 		end
-	end
-	if realm and #realm>0 then
-		AddLines(self,realm);
 	end
 end);
 
@@ -288,8 +413,8 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	-- GroupFinder > ApplicantViewer > Tooltip
 	if owner_name and owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
 		local charName, realmName = strsplit("-",name);
-		local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName or myRealm)))};
-		if #realm>0 then
+		local realm = {GetRealmInfo(realm)};
+		if realm and #realm>0 then
 			AddLines(self,realm);
 		end
 	end
@@ -309,8 +434,8 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 		local leaderName = line_str:match(_LFG_LIST_TOOLTIP_LEADER);
 		if leaderName then
 			local charName, realmName = strsplit("-",leaderName);
-			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName or myRealm)))};
-			if #realm>0 then
+			local realm = {GetRealmInfo(realm)};
+			if realm and #realm>0 then
 				AddLines(self,realm);
 			end
 		end
@@ -323,8 +448,8 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
-			local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
-			if #realm>0 then
+			local realm = {GetRealmInfo(realm)};
+			if realm and #realm>0 then
 				FriendsTooltip.height = FriendsTooltip.height - line:GetHeight(); -- remove prev. added line height
 				locked=true;
 				FriendsFrameTooltip_SetLine(line, anchor, AddLines(text,realm,NORMAL_FONT_COLOR_CODE.."%s:|r "), yOffset);
@@ -340,8 +465,8 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
 	local charName, realmName = strsplit("-",name);
 	if realmName then
-		local realm = {data_update(LRI:GetRealmInfo(realm_fix(realmName)))};
-		if #realm>0 then
+		local realm = {GetRealmInfo(realm)};
+		if realm and #realm>0 then
 			member.Name:SetText(realm[iconstr]..member.Name:GetText());
 		end
 	end
@@ -459,7 +584,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	end
 	local cmd, arg = strsplit(" ", cmd, 2);
 	cmd = cmd:lower();
-	
+
 	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
 		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
 		_print(cmd);
