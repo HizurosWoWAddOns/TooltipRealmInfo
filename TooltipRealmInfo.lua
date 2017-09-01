@@ -8,11 +8,11 @@ local LRI = LibStub("LibRealmInfo");
 local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
-local DST,locked, Code2UTC = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10};
+local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3};
 local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true,countryflag="languageline",finder_counryflag=true};
 local L = setmetatable({["type"]=TYPE,["language"]=LANGUAGE},{__index=function(t,k) local v=tostring(k);rawset(t,k,v);return v;end});
 local tooltipLines = { {"language",locale,"Realm language"}, {"type",rules,"Realm type"}, {"timezone",timezone,"Realm timezone"}, {"battlegroup",battlegroup,"Realm battlegroup"}, {"connectedrealms",connections,"Connected realms"} };
-local replaceRealmNames,region = { -- <api> = <LibRealmInfo compatible>
+local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 	["AeriePeak"] = "Aerie Peak",
 	["AltarofStorms"] = "Altar of Storms",
 	["AlteracMountains"] = "Alterac Mountains",
@@ -229,65 +229,68 @@ function ns.debug(...)
 end
 
 local function GetRealmInfo(realm)
-	if not realm or (type(realm)=="string" and realm:len()==0) then
+	if tostring(realm or ""):len()==0 then
 		realm = myRealm;
 	end
+
 	if replaceRealmNames[realm] then
 		realm = replaceRealmNames[realm];
 	end
 
 	if not LRI:GetCurrentRegion() then
-		region = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
+		regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
 	end
 
-	local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name = LRI:GetRealmInfo(realm,region);
+	local res = {LRI:GetRealmInfo(realm,regionFix)};
 
-	if not id then
+	if #res==0 then
 		return;
 	end
 
 	-- add icon
-	local iconfile = media..locale;
-	local iconstr = "|T"..iconfile..":0:2|t";
+	res[iconfile] = media..res[locale];
+	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
 
-	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
+	-- replace ptPT because it is missing in LFG_LIST_LANGUAGE_PTPT...
 	if locale == "ptPT" then
 		locale = "ptBR";
 	end
 
 	-- modify rules
-	if rules == "RP" then
-		rules = "RP PvE";
-	elseif rules == "RPPVP" then
-		rules = "RP PvP";
+	if res[rules] == "RP" then
+		res[rules] = "RP PvE";
+	elseif res[rules] == "RPPVP" then
+		res[rules] = "RP PvP";
 	else
-		rules = gsub(rules,"V","v");
+		res[rules] = gsub(res[rules],"V","v");
 	end
 
 	-- modify timezones
-	if not timezone then
-		if region=="EU" then
-			if locale=="enGB" or locale=="ptPT" then
-				timezone = 0 + DST;
+	if not res[timezone] then
+		if res[region]=="EU" then
+			if res[locale]=="enGB" or res[locale]=="ptPT" then
+				res[timezone] = 0 + DST;
 			elseif locale=="ruRU" then
-				timezone = 3;
+				res[timezone] = 3; -- no DST
 			else
-				timezone = 1 + DST;
+				res[timezone] = 1 + DST;
 			end
+		elseif res[region]=="CN" or res[region]=="TW" then
+			res[timezone] = 8;
 		else
-			timezone = ((region=="CN" or region=="TW") and 8 or 9);
+			res[timezone] = 9;
 		end
 	else
-		timezone = Code2UTC[timezone] + DST;
+		res[timezone] = Code2UTC[res[timezone]] + DST;
 	end
 
-	if not timezone then
-		timezone = "Unknown";
+	if not res[timezone] then
+		res[timezone] = "Unknown";
 	else
-		timezone = "UTC" .. (timezone<0 and "-" or "+") .. timezone;
+		res[timezone] = "UTC" .. ( (res[timezone]==0 and " ") or (res[timezone]<0 and "-") or "+" ) .. res[timezone];
 	end
 
-	return id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name;
+	return res;
 end
 
 local function AddLines(tt,realm,_title)
@@ -319,7 +322,7 @@ local function AddLines(tt,realm,_title)
 				local names,color = {},"ffffff";
 				if realm[v[2]] and #realm[v[2]]>0 then
 					for i=1,#realm[v[2]] do
-						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],region);
+						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],regionFix);
 						if realm_name == myRealm then
 							color="00ff00";
 						end
@@ -384,8 +387,8 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	if unit and UnitIsPlayer(unit) then
 		guid = UnitGUID(unit);
 		if tostring(guid):match("^Player%-") then
-			local _, _, _, _, _, _, _realm = GetPlayerInfoByGUID(guid);
-			realm = {GetRealmInfo(_realm)};
+			local _, _, _, _, _, _, realmName = GetPlayerInfoByGUID(guid);
+			realm = GetRealmInfo(realmName);
 		end
 
 		if realm and #realm>0 then
@@ -406,7 +409,7 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	-- GroupFinder > ApplicantViewer > Tooltip
 	if owner_name and owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
 		local charName, realmName = strsplit("-",name);
-		local realm = {GetRealmInfo(realm)};
+		local realm = GetRealmInfo(realmName);
 		if realm and #realm>0 then
 			AddLines(self,realm);
 		end
@@ -427,7 +430,7 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 		local leaderName = line_str:match(_LFG_LIST_TOOLTIP_LEADER);
 		if leaderName then
 			local charName, realmName = strsplit("-",leaderName);
-			local realm = {GetRealmInfo(realm)};
+			local realm = GetRealmInfo(realmName);
 			if realm and #realm>0 then
 				AddLines(self,realm);
 			end
@@ -441,7 +444,7 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
-			local realm = {GetRealmInfo(realm)};
+			local realm = GetRealmInfo(realmName);
 			if realm and #realm>0 then
 				FriendsTooltip.height = FriendsTooltip.height - line:GetHeight(); -- remove prev. added line height
 				locked=true;
@@ -458,16 +461,26 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
 	local charName, realmName = strsplit("-",name);
 	if realmName then
-		local realm = {GetRealmInfo(realm)};
+		local realm = GetRealmInfo(realmName);
 		if realm and #realm>0 then
 			member.Name:SetText(realm[iconstr]..member.Name:GetText());
 		end
 	end
 end);
 
+local function get_set(info,value)
+	local key = info[#info];
+	if value~=nil then
+		TooltipRealmInfoDB[key] = not TooltipRealmInfoDB[key];
+	end
+	return TooltipRealmInfoDB[key];
+end
+
 local options = {
 	type = "group",
 	name = addon,
+	get = get_set,
+	set = get_set,
 	args = {
 		tooltip = {
 			type = "group", order = 1,
@@ -476,36 +489,26 @@ local options = {
 			args = {
 				battlegroup = {
 					type = "toggle", order = 1,
-					name = L["Realm battlegroup"],
-					get = function() return TooltipRealmInfoDB.battlegroup; end,
-					set = function(_,v) TooltipRealmInfoDB.battlegroup = v; end
+					name = L["Realm battlegroup"]
 				},
 				timezone = {
 					type = "toggle", order = 2,
-					name = L["Realm timezone"],
-					get = function() return TooltipRealmInfoDB.timezone; end,
-					set = function(_,v) TooltipRealmInfoDB.timezone = v; end
+					name = L["Realm timezone"]
 				},
 				type = {
 					type = "toggle", order = 3,
-					name = L["Realm type"],
-					get = function() return TooltipRealmInfoDB.type; end,
-					set = function(_,v) TooltipRealmInfoDB.type = v; end
+					name = L["Realm type"]
 				},
 				language = {
 					type = "toggle", order = 4,
-					name = L["Realm language"],
-					get = function() return TooltipRealmInfoDB.language; end,
-					set = function(_,v) TooltipRealmInfoDB.language = v; end
+					name = L["Realm language"]
 				},
 				connectedrealms = {
 					type = "toggle", order = 5,
-					name = L["Connected realms"],
-					get = function() return TooltipRealmInfoDB.connectedrealms; end,
-					set = function(_,v) TooltipRealmInfoDB.connectedrealms = v; end
+					name = L["Connected realms"]
 				},
 				countryflag = {
-					type = "select", order = 6, width = "double",
+					type = "select", order = 6, width = "full",
 					name = L["Country flag"],
 					desc = L["Display the country flag without text on the left side in tooltip"],
 					values = {
@@ -513,9 +516,7 @@ local options = {
 						charactername = L["Behind the character name"].." ("..L["Currently doesn't work with TipTac"]..")",
 						ownline = L["In own tooltip line on the left site"],
 						none = ADDON_DISABLED
-					},
-					get = function() return TooltipRealmInfoDB.countryflag; end,
-					set = function(_,v) TooltipRealmInfoDB.countryflag = v; end
+					}
 				}
 			}
 		},
@@ -524,12 +525,10 @@ local options = {
 			name = LFGLIST_NAME,
 			inline = true,
 			args = {
-				countryflag = {
+				finder_counryflag = {
 					type = "toggle",
 					name = L["Country flag"],
-					desc = L["Prepend country flag on character name"],
-					get = function() return TooltipRealmInfoDB.finder_counryflag; end,
-					set = function(_,v) TooltipRealmInfoDB.finder_counryflag = v; end
+					desc = L["Prepend country flag on character name"]
 				}
 			}
 		}
@@ -585,7 +584,10 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
 		ns.print(L["'AddOn loaded...' message:"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 	elseif cmd=="id" then
-		ns.print(LRI:GetRealmInfoByID(tonumber(arg)))
+		if (not realmFix) and (not LRI:GetCurrentRegion()) then
+			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
+		end
+		ns.print(LRI:GetRealmInfoByID(tonumber(arg),realmFix))
 	elseif cmd=="config" then
 		InterfaceOptionsFrame_OpenToCategory(addon);
 		InterfaceOptionsFrame_OpenToCategory(addon);
