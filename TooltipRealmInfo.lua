@@ -222,32 +222,25 @@ ns.print=function(...)
 	print(unpack(t));
 end
 
-ns.debug = function() end
-if GetAddOnMetadata(addon,"Version")=="@project-version@" then
-	ns.debug = function(...)
+function ns.debug(...)
+	if GetAddOnMetadata(addon,"Version")=="@".."project-version".."@" then
 		ns.print("debug",...);
 	end
 end
 
 local function GetRealmInfo(realm)
-	ns.debug("<GRI>",1,tostring(realm));
 	if not realm or (type(realm)=="string" and realm:len()==0) then
 		realm = myRealm;
 	end
-	ns.debug("<GRI>",2,tostring(realm));
 	if replaceRealmNames[realm] then
 		realm = replaceRealmNames[realm];
 	end
-	ns.debug("<GRI>",3,tostring(realm));
 
 	if not LRI:GetCurrentRegion() then
 		region = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
 	end
-	ns.debug("<GRI>",4,tostring(region));
 
 	local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name = LRI:GetRealmInfo(realm,region);
-
-	ns.debug("<GRI>",5,tostring(id));
 
 	if not id then
 		return;
