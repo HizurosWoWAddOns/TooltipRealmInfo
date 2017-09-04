@@ -9,8 +9,27 @@ local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
 local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3};
-local dbDefaults = {battlegroup=false,timezone=false,type=true,language=true,connectedrealms=true,loadedmessage=true,countryflag="languageline",finder_counryflag=true};
-local tooltipLines = { {"language",locale,"Realm language"}, {"type",rules,"Realm type"}, {"timezone",timezone,"Realm timezone"}, {"battlegroup",battlegroup,"Realm battlegroup"}, {"connectedrealms",connections,"Connected realms"} };
+local dbDefaults = {
+	battlegroup=false,
+	timezone=false,
+	type=true,
+	language=true,
+	connectedrealms=true,
+	loadedmessage=true,
+	countryflag="languageline",
+	finder_counryflag=true
+};
+
+local tooltipLines = {
+	-- { <name of line in slash command>, <return table index from local GetRealmInfo function>, <name of line in tooltip> }
+	-- 1. and 3. value will be localized in the function AddLines() and SlashCmdList["TOOLTIPREALMINFO"]() before output
+	{"language",locale,"RlmLang"},
+	{"type",rules,"RlmType"},
+	{"timezone",timezone,"RlmTZ"},
+	{"battlegroup",battlegroup,"RlmPVPGrp"},
+	{"connectedrealms",connections,"RlmConn"}
+};
+
 local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 	["AeriePeak"] = "Aerie Peak", ["AltarofStorms"] = "Altar of Storms", ["AlteracMountains"] = "Alterac Mountains",
 	["AmanThul"] = "Aman'Thul", ["Anubarak"] = "Anub'arak", ["Area52"] = "Area 52", ["ArgentDawn"] = "Argent Dawn",
@@ -228,6 +247,7 @@ local function AddLines(tt,realm,_title)
 	return tt;
 end
 
+-- some gametooltip scripts/funcion hooks
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	local name, unit, guid, realm = self:GetUnit();
 	if not unit then
@@ -341,32 +361,32 @@ local options = {
 			args = {
 				battlegroup = {
 					type = "toggle", order = 1,
-					name = L["Realm battlegroup"]
+					name = L["RlmPvPGrp"]
 				},
 				timezone = {
 					type = "toggle", order = 2,
-					name = L["Realm timezone"]
+					name = L["RlmTZ"]
 				},
 				type = {
 					type = "toggle", order = 3,
-					name = L["Realm type"]
+					name = L["RlmType"]
 				},
 				language = {
 					type = "toggle", order = 4,
-					name = L["Realm language"]
+					name = L["RlmLang"]
 				},
 				connectedrealms = {
 					type = "toggle", order = 5,
-					name = L["Connected realms"]
+					name = L["RlmConn"]
 				},
 				countryflag = {
 					type = "select", order = 6, width = "full",
-					name = L["Country flag"],
-					desc = L["Display the country flag without text on the left side in tooltip"],
+					name = L["CtryFlg"],
+					desc = L["CtryFlgDesc"],
 					values = {
-						languageline = L["Behind language in line 'Realm language'"],
-						charactername = L["Behind the character name"].." ("..L["Currently doesn't work with TipTac"]..")",
-						ownline = L["In own tooltip line on the left site"],
+						languageline = L["CtryFlgSelLang"],
+						charactername = L["CtryFlgSelName"].." "..L["CtryFlgTipTacInfo"],
+						ownline = L["CtryFlgSelOwn"],
 						none = ADDON_DISABLED
 					}
 				}
@@ -379,8 +399,8 @@ local options = {
 			args = {
 				finder_counryflag = {
 					type = "toggle",
-					name = L["Country flag"],
-					desc = L["Prepend country flag on character name"]
+					name = L["CtryFlg"],
+					desc = L["CtryFlgGrpFndrDesc"]
 				}
 			}
 		}
@@ -412,7 +432,7 @@ frame:SetScript("OnEvent",function(self,event,name)
 		end
 		RegisterOptionPanel();
 		if TooltipRealmInfoDB.loadedmessage then
-			ns.print(L["AddOn loaded..."],"","\n",L["For options use /ttri or /tooltiprealminfo"]);
+			ns.print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
@@ -424,7 +444,7 @@ frame:RegisterEvent("PLAYER_LOGIN");
 
 SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	local _print = function(key)
-		ns.print( (TooltipRealmInfoDB[key] and L["Tooltip line '%s' is now shown"] or L["Tooltip line '%s' is now hidden"]):format(L[key]) )
+		ns.print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
 	end
 	local cmd, arg = strsplit(" ", cmd, 2);
 	cmd = cmd:lower();
@@ -434,7 +454,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		_print(cmd);
 	elseif cmd=="loadedmessage" then
 		TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
-		ns.print(L["'AddOn loaded...' message:"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
+		ns.print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 	elseif cmd=="id" then
 		if (not realmFix) and (not LRI:GetCurrentRegion()) then
 			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
@@ -444,15 +464,15 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		InterfaceOptionsFrame_OpenToCategory(addon);
 		InterfaceOptionsFrame_OpenToCategory(addon);
 	else
-		ns.print(L["Chat command list for /ttri or /tooltiprealminfo"]);
+		ns.print(L["CmdListInfo"]);
 		for i,v in ipairs({"battlegroup","timezone","language","type","connectedrealms"})do
-			ns.print("", v, "|cffffff00-", (TooltipRealmInfoDB[v] and L["Hide %s in tooltip"] or L["Show %s in tooltip"]):format(L[v]));
+			ns.print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
 		end
-		ns.print("","loadedmessage","|cffffff00-",L["Toggle 'AddOn loaded...' message"]);
-		ns.print("","config","|cffffff00-",L["Open option panel"]);
+		ns.print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
+		ns.print("","config","|cffffff00-",L["CmdListOptions"]);
 	end
 end
 
-SLASH_TOOLTIPREALMINFO1 = "/tooltiprealminfo";
-SLASH_TOOLTIPREALMINFO2 = "/ttri";
+SLASH_TOOLTIPREALMINFO1 = L["CmdSlashStringLong"];
+SLASH_TOOLTIPREALMINFO2 = L["CmdSlashStringShort"];
 
