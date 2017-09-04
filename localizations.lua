@@ -8,6 +8,7 @@ local L = setmetatable({},{
 		return v;
 	end
 });
+ns.L = L;
 
 -- Hi. This addon needs your help for localization. :)
 -- https://wow.curseforge.com/projects/tooltiprealminfo/localization

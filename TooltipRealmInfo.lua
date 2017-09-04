@@ -1,6 +1,7 @@
 
 TooltipRealmInfoDB = {};
 local addon, ns = ...;
+local L = ns.L;
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
