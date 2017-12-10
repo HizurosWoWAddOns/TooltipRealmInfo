@@ -2,10 +2,12 @@
 TooltipRealmInfoDB = {};
 local addon, ns = ...;
 local L = ns.L;
+local C = WrapTextInColorCode;
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
 
+local version = GetAddOnMetadata(addon,"Version");
 local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
@@ -18,7 +20,10 @@ local dbDefaults = {
 	connectedrealms=true,
 	loadedmessage=true,
 	countryflag="languageline",
-	finder_counryflag=true
+	finder_counryflag=true,
+	ttGrpFinder=true,
+	ttPlayer=true,
+	ttFriends=true
 };
 
 local tooltipLines = {
@@ -79,15 +84,15 @@ local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 	["Veklor"] = "Vek'lor", ["Veknilash"] = "Vek'nilash", ["Voljin"] = "Vol'jin", ["ZirkeldesCenarius"] = "Zirkel des Cenarius", ["Zuljin"] = "Zul'jin"
 };
 
-ns.print=function(...)
+function ns.print(...)
 	local colors,t,c = {"0099ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"},{},1;
 	for i,v in ipairs({...}) do
 		v = tostring(v);
 		if i==1 and v~="" then
-			tinsert(t,"|cff0099ff"..addon.."|r:"); c=2;
+			tinsert(t,C(addon,"ff"..colors[1])..":"); c=2;
 		end
 		if not v:match("||c") then
-			v,c = "|cff"..colors[c]..v.."|r", c<#colors and c+1 or 1;
+			v,c = C(v,"ff"..colors[c]), c<#colors and c+1 or 1;
 		end
 		tinsert(t,v);
 	end
@@ -95,7 +100,7 @@ ns.print=function(...)
 end
 
 function ns.debug(...)
-	if GetAddOnMetadata(addon,"Version")=="@".."project-version".."@" then
+	if version=="@".."project-version".."@" then
 		ns.print("debug",...);
 	end
 end
@@ -209,7 +214,7 @@ local function AddLines(tt,realm,_title)
 						flat = {};
 					end
 					for i,v in pairs(names) do
-						v = "|cff"..color..v.."|r";
+						v = C(v,"ff"..color);
 						if flat then
 							if title then
 								tt:AddLine(title);
@@ -234,7 +239,7 @@ local function AddLines(tt,realm,_title)
 					tt = tt.."|n"..title..text;
 				else
 					locked=true;
-					tt:AddDoubleLine(title,"|cffffffff"..text.."|r");
+					tt:AddDoubleLine(title,C(text,"ffffffff"));
 					locked=false;
 				end
 			end
@@ -250,6 +255,7 @@ end
 
 -- some gametooltip scripts/funcion hooks
 GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+	if not TooltipRealmInfoDB.ttPlayer then return end
 	local name, unit, guid, realm = self:GetUnit();
 	if not unit then
 		local mf = GetMouseFocus();
@@ -271,7 +277,7 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 end);
 
 hooksecurefunc(GameTooltip,"SetText",function(self,name)
-	if locked then return end
+	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
@@ -290,7 +296,7 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 end);
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
-	if locked then return end
+	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
@@ -313,7 +319,7 @@ end);
 
 -- Friend list tooltip
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
-	if locked then return end
+	if locked or (not TooltipRealmInfoDB.ttFriends) then return end
 	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
@@ -328,7 +334,7 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 	end
 end);
 
--- Groupfinder applicants
+-- Groupfinder applicants (only country flags in scroll frame)
 hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
 	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
@@ -355,11 +361,38 @@ local options = {
 	get = get_set,
 	set = get_set,
 	args = {
-		tooltip = {
+		tooltips = {
 			type = "group", order = 1,
-			name = L["Tooltip"],
+			name = C(L["TTDisplay"],"ff0099ff"),
 			inline = true,
 			args = {
+				desc = {
+					type = "description", order = 0,
+					name = L["TTDisplayDesc"]
+				},
+				ttGrpFinder = {
+					type = "toggle", order = 2,
+					name = L["TTDisplayGrpFinder"]
+				},
+				ttPlayer = {
+					type = "toggle", order = 2,
+					name = L["TTDisplayPlayer"]
+				},
+				ttFriends = {
+					type = "toggle", order = 2,
+					name = L["TTDisplayFriends"]
+				}
+			}
+		},
+		tooltipLines = {
+			type = "group", order = 2,
+			name = C(L["TTLines"],"ff0099ff"),
+			inline = true,
+			args = {
+				desc = {
+					type = "description", order = 0,
+					name = L["TTLinesDesc"]
+				},
 				battlegroup = {
 					type = "toggle", order = 1,
 					name = L["RlmPvPGrp"]
@@ -394,8 +427,8 @@ local options = {
 			}
 		},
 		groupfinder = {
-			type = "group", order = 2,
-			name = LFGLIST_NAME,
+			type = "group", order = 3,
+			name = C(LFGLIST_NAME,"ff0099ff"),
 			inline = true,
 			args = {
 				finder_counryflag = {
