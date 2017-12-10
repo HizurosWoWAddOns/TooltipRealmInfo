@@ -14,6 +14,13 @@ ns.L = L;
 -- https://wow.curseforge.com/projects/tooltiprealminfo/localization
 
 -- english localization
+
+-- 2017-12-10 - curseforge localization page is buggy. could not add new entries.
+L["TTDisplayFriends"] = "Friend list"
+L["TTLines"] = "Tooltip lines"
+L["TTLinesDesc"] = "Add following information to choosen tooltips."
+-- /2017-12-10
+
 --@do-not-package@
 L["AddOnLoaded"] = "AddOn loaded..."
 L["Tooltip"] = "Tooltip"
@@ -21,9 +28,6 @@ L["TTDisplay"] = "Tooltips"
 L["TTDisplayDesc"] = "Add informations to following tooltips."
 L["TTDisplayGrpFinder"] = "Group finder"
 L["TTDisplayPlayer"] = "Player tooltip"
-L["TTDisplayFriends"] = "Friend list"
-L["TTLines"] = "Tooltip lines"
-L["TTLinesDesc"] = "Add following information to choosen tooltips."
 
 -- tooltip line header and option names
 L["RlmConn"] = "Connected realms"
