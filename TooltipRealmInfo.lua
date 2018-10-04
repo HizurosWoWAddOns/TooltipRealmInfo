@@ -161,6 +161,10 @@ local function GetRealmInfo(realm)
 		res[timezone] = Code2UTC[res[timezone]] + DST;
 	end
 
+	if res[region]=="EU" and res[locale]=="enUS" then
+		res[locale]="enGB"
+	end
+
 	if not res[timezone] then
 		res[timezone] = "Unknown";
 	else
