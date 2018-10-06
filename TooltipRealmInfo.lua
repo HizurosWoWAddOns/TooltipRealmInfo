@@ -129,7 +129,7 @@ local function GetRealmInfo(realm)
 	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
 
 	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
-	if not LFG_LIST_LANGUAGE_PTPT then
+	if not LFG_LIST_LANGUAGE_PTPT and res[locale]=="ptPT" then
 		res[locale] = "ptBR";
 	end
 
