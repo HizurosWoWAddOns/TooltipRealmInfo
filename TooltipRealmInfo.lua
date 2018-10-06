@@ -128,9 +128,9 @@ local function GetRealmInfo(realm)
 	res[iconfile] = media..res[locale];
 	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
 
-	-- replace ptPT because it is missing in LFG_LIST_LANGUAGE_PTPT...
-	if locale == "ptPT" then
-		locale = "ptBR";
+	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
+	if not LFG_LIST_LANGUAGE_PTPT then
+		res[locale] = "ptBR";
 	end
 
 	-- modify rules
