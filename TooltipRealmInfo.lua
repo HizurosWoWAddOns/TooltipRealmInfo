@@ -133,6 +133,13 @@ local function GetRealmInfo(realm)
 		res[locale] = "ptBR";
 	end
 
+	-- modify language codes
+	if res[region]=="EU" and res[locale]=="enUS" then
+		res[locale]="enGB"
+	elseif res[region]=="US" and res[timezone]=="AEST" then
+		res[locale]="enAU" -- australian
+	end
+
 	-- modify rules
 	local rules_l = res[rules]:lower();
 	if rules_l=="rp" or rules_l=="rppvp" then
@@ -160,10 +167,6 @@ local function GetRealmInfo(realm)
 		end
 	else
 		res[timezone] = Code2UTC[res[timezone]] + DST;
-	end
-
-	if res[region]=="EU" and res[locale]=="enUS" then
-		res[locale]="enGB"
 	end
 
 	if not res[timezone] then
