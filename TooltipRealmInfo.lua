@@ -134,10 +134,11 @@ local function GetRealmInfo(realm)
 	end
 
 	-- modify rules
-	if res[rules] == "RP" then
+	local rules_l = res[rules]:lower();
+	if rules_l=="rp" or rules_l=="rppvp" then
 		res[rules] = "RP PvE";
-	elseif res[rules] == "RPPVP" then
-		res[rules] = "RP PvP";
+	elseif rules_l=="pvp" then
+		res[rules] = "PvE";
 	else
 		res[rules] = gsub(res[rules],"V","v");
 	end
