@@ -124,10 +124,6 @@ local function GetRealmInfo(realm)
 		return;
 	end
 
-	-- add icon
-	res[iconfile] = media..res[locale];
-	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
-
 	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
 	if not LFG_LIST_LANGUAGE_PTPT and res[locale]=="ptPT" then
 		res[locale] = "ptBR";
@@ -139,6 +135,10 @@ local function GetRealmInfo(realm)
 	elseif res[region]=="US" and res[timezone]=="AEST" then
 		res[locale]="enAU" -- australian
 	end
+
+	-- add icon
+	res[iconfile] = media..res[locale];
+	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
 
 	-- modify rules
 	local rules_l = res[rules]:lower();
