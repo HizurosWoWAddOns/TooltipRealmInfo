@@ -177,9 +177,22 @@ local function GetRealmInfo(realm)
 	return res;
 end
 
-local function AddLines(tt,realm,_title)
+local function AddLines(tt,object,_title)
 	if not _title then
 		_title = "%s: ";
+	end
+
+	local _;
+	if tostring(object):match("^Player%-%d*%-%x*$") then
+		_, _, _, _, _, charName, realmName = GetPlayerInfoByGUID(object);
+	else
+		charName, realmName = strsplit("-",object,2);
+	end
+
+	local realm = GetRealmInfo(realmName);
+
+	if not (realm and #realm>0) then
+		return false;
 	end
 
 	if realm[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
@@ -272,13 +285,8 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	end
 	if unit and UnitIsPlayer(unit) then
 		guid = UnitGUID(unit);
-		if tostring(guid):match("^Player%-") then
-			local _, _, _, _, _, _, realmName = GetPlayerInfoByGUID(guid);
-			realm = GetRealmInfo(realmName);
-		end
-
-		if realm and #realm>0 then
-			AddLines(self,realm);
+		if guid then
+			AddLines(self,guid);
 		end
 	end
 end);
@@ -294,15 +302,11 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	end
 	-- GroupFinder > ApplicantViewer > Tooltip
 	if owner_name and owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
-		local charName, realmName = strsplit("-",name);
-		local realm = GetRealmInfo(realmName);
-		if realm and #realm>0 then
-			AddLines(self,realm);
-		end
+		AddLines(self,owner_name);
 	end
 end);
 
-hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
+hooksecurefunc(GameTooltip,"AddLine",function(self,text)
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
@@ -311,14 +315,19 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,line_str)
 			owner_name = owner:GetDebugName();
 		end
 	end
-	-- GroupFinder > SearchResult > Tooltip
-	if owner_name and owner_name:find("^LFGListSearchPanelScrollFrameButton") then
-		local leaderName = line_str:match(_LFG_LIST_TOOLTIP_LEADER);
-		if leaderName then
-			local charName, realmName = strsplit("-",leaderName);
-			local realm = GetRealmInfo(realmName);
-			if realm and #realm>0 then
-				AddLines(self,realm);
+	if owner_name then
+		if owner_name:find("^LFGListSearchPanelScrollFrameButton") then -- GroupFinder > SearchResult > Tooltip
+			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
+			if leaderName then
+				AddLines(self,leaderName);
+			end
+		elseif owner_name:find("^CommunitiesFrameScrollChild") and owner.memberInfo and owner.memberInfo.guid then -- Community member list tooltips
+			if text==owner.memberInfo.name then
+				GameTooltip:ClearAllPoints();
+				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
+				if not AddLines(self,owner.memberInfo.guid) then
+					AddLines(self,owner.memberInfo.name)
+				end
 			end
 		end
 	end
