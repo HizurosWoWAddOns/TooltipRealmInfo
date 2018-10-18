@@ -13,7 +13,6 @@ local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
 local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3};
 local dbDefaults = {
-	battlegroup=false,
 	timezone=false,
 	type=true,
 	language=true,
@@ -33,7 +32,6 @@ local tooltipLines = {
 	{"language",locale,"RlmLang"},
 	{"type",rules,"RlmType"},
 	{"timezone",timezone,"RlmTZ"},
-	{"battlegroup",battlegroup,"RlmPVPGrp"},
 	{"connectedrealms",connections,"RlmConn"}
 };
 
@@ -347,7 +345,7 @@ end);
 hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
 	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
-	local charName, realmName = strsplit("-",name);
+	local charName, realmName = strsplit("-",name,2);
 	if realmName then
 		local realm = GetRealmInfo(realmName);
 		if realm and #realm>0 then
@@ -378,7 +376,7 @@ end
 local function get_set(info,value)
 	local key = info[#info];
 	if value~=nil then
-		TooltipRealmInfoDB[key] = not TooltipRealmInfoDB[key];
+		TooltipRealmInfoDB[key] = value;
 	end
 	return TooltipRealmInfoDB[key];
 end
@@ -400,7 +398,7 @@ local options = {
 				},
 				ttGrpFinder = {
 					type = "toggle", order = 2,
-					name = L["TTDisplayGrpFinder"]
+					name = LFGLIST_NAME, --desc = L["TTDisplayGrpFinderDesc"]
 				},
 				ttPlayer = {
 					type = "toggle", order = 2,
@@ -420,10 +418,6 @@ local options = {
 				desc = {
 					type = "description", order = 0,
 					name = L["TTLinesDesc"]
-				},
-				battlegroup = {
-					type = "toggle", order = 1,
-					name = L["RlmPvPGrp"]
 				},
 				timezone = {
 					type = "toggle", order = 2,
@@ -518,7 +512,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 	local cmd, arg = strsplit(" ", cmd, 2);
 	cmd = cmd:lower();
 
-	if cmd=="battlegroup" or cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
+	if cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
 		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
 		_print(cmd);
 	elseif cmd=="loadedmessage" then
@@ -534,7 +528,7 @@ SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
 		InterfaceOptionsFrame_OpenToCategory(addon);
 	else
 		ns.print(L["CmdListInfo"]);
-		for i,v in ipairs({"battlegroup","timezone","language","type","connectedrealms"})do
+		for i,v in ipairs({"timezone","language","type","connectedrealms"})do
 			ns.print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
 		end
 		ns.print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
