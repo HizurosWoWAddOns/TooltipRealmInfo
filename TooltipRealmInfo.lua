@@ -21,6 +21,7 @@ local dbDefaults = {
 	loadedmessage=true,
 	countryflag="languageline",
 	finder_counryflag=true,
+	communities_countryflag=true,
 	ttGrpFinder=true,
 	ttPlayer=true,
 	ttFriends=true
@@ -355,6 +356,25 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	end
 end);
 
+-- Communities members - add country flags
+local function CommunitiesMemberList_RefreshListDisplay_Hook(self)
+	if not TooltipRealmInfoDB.communities_countryflag then return end
+	local scrollFrame = self.ListScrollFrame;
+	local offset = HybridScrollFrame_GetOffset(scrollFrame);
+	local buttons = scrollFrame.buttons;
+	for i = 1, #buttons do
+		if buttons[i].memberInfo and buttons[i].memberInfo.name and buttons[i].memberInfo.clubType==1 then
+			local charName, realmName = strsplit("-",buttons[i].memberInfo.name,2);
+			local realm = GetRealmInfo(realmName);
+			if realm and #realm>0 then
+				buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
+				buttons[i]:UpdatePresence();
+				buttons[i]:UpdateNameFrame();
+			end
+		end
+	end
+end
+
 local function get_set(info,value)
 	local key = info[#info];
 	if value~=nil then
@@ -434,15 +454,20 @@ local options = {
 				}
 			}
 		},
-		groupfinder = {
+		country_flags = {
 			type = "group", order = 3,
-			name = C(LFGLIST_NAME,"ff0099ff"),
+			name = C(L["CtryFlg"],"ff0099ff"),
 			inline = true,
 			args = {
 				finder_counryflag = {
 					type = "toggle",
-					name = L["CtryFlg"],
+					name = LFGLIST_NAME,
 					desc = L["CtryFlgGrpFndrDesc"]
+				},
+				communities_countryflag = {
+					type = "toggle",
+					name = COMMUNITIES,
+					desc = L["CtryFlgCommDesc"]
 				}
 			}
 		}
@@ -476,6 +501,8 @@ frame:SetScript("OnEvent",function(self,event,name)
 		if TooltipRealmInfoDB.loadedmessage then
 			ns.print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
+	elseif event=="ADDON_LOADED" and "Blizzard_Communities"==name then
+		hooksecurefunc(CommunitiesFrame.MemberList,"RefreshListDisplay",CommunitiesMemberList_RefreshListDisplay_Hook);
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
 		DST = t.isdst and 1 or 0;
