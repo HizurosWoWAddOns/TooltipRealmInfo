@@ -182,16 +182,19 @@ local function AddLines(tt,object,_title)
 		_title = "%s: ";
 	end
 
-	local _;
-	if tostring(object):match("^Player%-%d*%-%x*$") then
-		_, _, _, _, _, charName, realmName = GetPlayerInfoByGUID(object);
-	else
-		charName, realmName = strsplit("-",object,2);
+	local objType,realm,_=type(object);
+	if objType=="table" then
+		realm = object;
+	elseif objType=="string" then
+		if object:match("^Player%-%d*%-%x*$") then -- object is guid
+			_, _, _, _, _, charName, realmName = GetPlayerInfoByGUID(object);
+		else
+			charName, realmName = strsplit("-",object,2);
+		end
+		realm = GetRealmInfo(realmName);
 	end
 
-	local realm = GetRealmInfo(realmName);
-
-	if not (realm and #realm>0) then
+	if not (type(realm)=="table" and #realm>0) then
 		return false;
 	end
 
