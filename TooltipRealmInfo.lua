@@ -7,7 +7,6 @@ local C = WrapTextInColorCode;
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
 
-local version = GetAddOnMetadata(addon,"Version");
 local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
@@ -98,8 +97,9 @@ function ns.print(...)
 	print(unpack(t));
 end
 
+local debugMode = "@project-version@"=="@".."project-version".."@";
 function ns.debug(...)
-	if version=="@".."project-version".."@" then
+	if debugMode then
 		ns.print("debug",...);
 	end
 end
@@ -482,6 +482,42 @@ local function RegisterOptionPanel()
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
 end
 
+function RegisterSlashCommand()
+	function SlashCmdList.TOOLTIPREALMINFO(cmd)
+		local _print = function(key)
+			ns.print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
+		end
+		local cmd, arg = strsplit(" ", cmd, 2);
+		cmd = cmd:lower();
+
+		if cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
+			TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
+			_print(cmd);
+		elseif cmd=="loadedmessage" then
+			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
+			ns.print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
+		elseif cmd=="id" then
+			if (not realmFix) and (not LRI:GetCurrentRegion()) then
+				regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
+			end
+			ns.print(LRI:GetRealmInfoByID(tonumber(arg),realmFix))
+		elseif cmd=="config" then
+			InterfaceOptionsFrame_OpenToCategory(addon);
+			InterfaceOptionsFrame_OpenToCategory(addon);
+		else
+			ns.print(L["CmdListInfo"]);
+			for i,v in ipairs({"timezone","language","type","connectedrealms"})do
+				ns.print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
+			end
+			ns.print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
+			ns.print("","config","|cffffff00-",L["CmdListOptions"]);
+		end
+	end
+
+	SLASH_TOOLTIPREALMINFO1 = L["CmdSlashStringLong"];
+	SLASH_TOOLTIPREALMINFO2 = L["CmdSlashStringShort"];
+end
+
 frame:SetScript("OnEvent",function(self,event,name)
 	if event=="ADDON_LOADED" and addon==name then
 		if TooltipRealmInfoDB==nil then
@@ -492,15 +528,8 @@ frame:SetScript("OnEvent",function(self,event,name)
 				TooltipRealmInfoDB[k]=v;
 			end
 		end
-		if TooltipRealmInfoDB.rules~=nil then
-			TooltipRealmInfoDB.type = TooltipRealmInfoDB.rules;
-			TooltipRealmInfoDB.rules = nil;
-		end
-		if TooltipRealmInfoDB.locale~=nil then
-			TooltipRealmInfoDB.language = TooltipRealmInfoDB.locale;
-			TooltipRealmInfoDB.locale = nil;
-		end
 		RegisterOptionPanel();
+		RegisterSlashCommand();
 		if TooltipRealmInfoDB.loadedmessage then
 			ns.print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
@@ -513,38 +542,3 @@ frame:SetScript("OnEvent",function(self,event,name)
 end);
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
-
-SlashCmdList["TOOLTIPREALMINFO"] = function(cmd)
-	local _print = function(key)
-		ns.print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
-	end
-	local cmd, arg = strsplit(" ", cmd, 2);
-	cmd = cmd:lower();
-
-	if cmd=="timezone" or cmd=="type" or cmd=="language" or cmd=="connectedrealms" then
-		TooltipRealmInfoDB[cmd] = not TooltipRealmInfoDB[cmd];
-		_print(cmd);
-	elseif cmd=="loadedmessage" then
-		TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
-		ns.print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
-	elseif cmd=="id" then
-		if (not realmFix) and (not LRI:GetCurrentRegion()) then
-			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
-		end
-		ns.print(LRI:GetRealmInfoByID(tonumber(arg),realmFix))
-	elseif cmd=="config" then
-		InterfaceOptionsFrame_OpenToCategory(addon);
-		InterfaceOptionsFrame_OpenToCategory(addon);
-	else
-		ns.print(L["CmdListInfo"]);
-		for i,v in ipairs({"timezone","language","type","connectedrealms"})do
-			ns.print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
-		end
-		ns.print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
-		ns.print("","config","|cffffff00-",L["CmdListOptions"]);
-	end
-end
-
-SLASH_TOOLTIPREALMINFO1 = L["CmdSlashStringLong"];
-SLASH_TOOLTIPREALMINFO2 = L["CmdSlashStringShort"];
-
