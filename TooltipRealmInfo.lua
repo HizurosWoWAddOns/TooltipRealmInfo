@@ -7,7 +7,7 @@ local C = WrapTextInColorCode;
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
 
-local frame, media, myRealm = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\", GetRealmName();
+local frame, media = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
 local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3,BRT=-3};
@@ -33,6 +33,17 @@ local tooltipLines = {
 	{"timezone",timezone,"RlmTZ"},
 	{"connectedrealms",connections,"RlmConn"}
 };
+
+local myRealm = {GetRealmName(),false};
+do
+	local pattern = "^"..(GetRealmName():gsub("(.)","%1*")).."$";
+	for i,v in ipairs(GetAutoCompleteRealms()) do
+		if v:match(pattern) then
+			myRealm[2] = v;
+			break;
+		end
+	end
+end
 
 local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 	["AeriePeak"] = "Aerie Peak", ["AltarofStorms"] = "Altar of Storms", ["AlteracMountains"] = "Alterac Mountains",
@@ -104,22 +115,37 @@ function ns.debug(...)
 	end
 end
 
-local function GetRealmInfo(realm)
-	if tostring(realm or ""):len()==0 then
-		realm = myRealm;
+local function GetRealmInfo(object)
+	if not (type(object)=="string" and object:trim():len()>0) then
+		return false;
 	end
 
-	if replaceRealmNames[realm] then
-		realm = replaceRealmNames[realm];
+	local realm,res,_;
+	if object:find("^Player%-%d*%-%x*$") then -- object is guid
+		res = {LRI:GetRealmInfoByID(tonumber(object:match("^Player%-(%d+)")))};
 	end
 
-	if not LRI:GetCurrentRegion() then
-		regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
+	if not (res and #res>0) then
+		if object:find("%-") then
+			_,realm = strsplit("-",object,2); -- character name + realm
+		end
+
+		if not realm then
+			realm = myRealm[2];
+		end
+
+		if replaceRealmNames[realm] then
+			realm = replaceRealmNames[realm];
+		end
+
+		if not LRI:GetCurrentRegion() then
+			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
+		end
+
+		res = {LRI:GetRealmInfo(realm,regionFix)};
 	end
 
-	local res = {LRI:GetRealmInfo(realm,regionFix)};
-
-	if #res==0 then
+	if not (res and #res>0) then
 		return;
 	end
 
@@ -177,7 +203,7 @@ local function GetRealmInfo(realm)
 	return res;
 end
 
-local function AddLines(tt,object,_title)
+local function AddLines(tt,object,_title,newLineOnFlat)
 	if not _title then
 		_title = "%s: ";
 	end
@@ -186,12 +212,7 @@ local function AddLines(tt,object,_title)
 	if objType=="table" then
 		realm = object;
 	elseif objType=="string" then
-		if object:match("^Player%-%d*%-%x*$") then -- object is guid
-			_, _, _, _, _, charName, realmName = GetPlayerInfoByGUID(object);
-		else
-			charName, realmName = strsplit("-",object,2);
-		end
-		realm = GetRealmInfo(realmName);
+		realm = GetRealmInfo(object);
 	end
 
 	if not (type(realm)=="table" and #realm>0) then
@@ -223,7 +244,7 @@ local function AddLines(tt,object,_title)
 				if realm[v[2]] and #realm[v[2]]>0 then
 					for i=1,#realm[v[2]] do
 						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],regionFix);
-						if realm_name == myRealm then
+						if realm_name == myRealm[1] then
 							color="00ff00";
 						end
 						tinsert(names,realm_name);
@@ -250,7 +271,7 @@ local function AddLines(tt,object,_title)
 						end
 					end
 					if flat then
-						tt:AddLine(table.concat(flat,", "),1,1,1,1);
+						tt:AddLine(table.concat(flat,", ")..(newLineOnFlat and "|n " or ""),1,1,1,1);
 					end
 					text = "";
 				end
@@ -324,13 +345,11 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text)
 			if leaderName then
 				AddLines(self,leaderName);
 			end
-		elseif owner_name:find("^CommunitiesFrameScrollChild") and owner.memberInfo and owner.memberInfo.guid then -- Community member list tooltips
+		elseif owner_name:find("^CommunitiesFrameScrollChild") and owner.memberInfo then -- Community member list tooltips
 			if text==owner.memberInfo.name then
 				GameTooltip:ClearAllPoints();
 				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
-				if not AddLines(self,owner.memberInfo.guid) then
-					AddLines(self,owner.memberInfo.name)
-				end
+				AddLines(self,owner.memberInfo.name,nil,true)
 			end
 		end
 	end
@@ -357,9 +376,8 @@ end);
 hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
 	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
-	local charName, realmName = strsplit("-",name,2);
-	if realmName then
-		local realm = GetRealmInfo(realmName);
+	if name then
+		local realm = GetRealmInfo(name);
 		if realm and #realm>0 then
 			member.Name:SetText(realm[iconstr]..member.Name:GetText());
 		end
@@ -374,8 +392,7 @@ local function CommunitiesMemberList_RefreshListDisplay_Hook(self)
 	local buttons = scrollFrame.buttons;
 	for i = 1, #buttons do
 		if buttons[i].memberInfo and buttons[i].memberInfo.name and buttons[i].memberInfo.clubType==1 then
-			local charName, realmName = strsplit("-",buttons[i].memberInfo.name,2);
-			local realm = GetRealmInfo(realmName);
+			local realm = GetRealmInfo(buttons[i].memberInfo.name);
 			if realm and #realm>0 then
 				buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
 				buttons[i]:UpdatePresence();
@@ -499,11 +516,6 @@ function RegisterSlashCommand()
 		elseif cmd=="loadedmessage" then
 			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
 			ns.print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
-		elseif cmd=="id" then
-			if (not realmFix) and (not LRI:GetCurrentRegion()) then
-				regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()]; -- i'm not sure but sometimes LibRealmInfo aren't able to detect region
-			end
-			ns.print(LRI:GetRealmInfoByID(tonumber(arg),realmFix))
 		elseif cmd=="config" then
 			InterfaceOptionsFrame_OpenToCategory(addon);
 			InterfaceOptionsFrame_OpenToCategory(addon);
