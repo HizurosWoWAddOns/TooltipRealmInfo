@@ -120,13 +120,22 @@ local function GetRealmInfo(object)
 		return false;
 	end
 
-	local realm,res,_;
-	if object:find("^Player%-%d*%-%x*$") then -- object is guid
-		res = {LRI:GetRealmInfoByID(tonumber(object:match("^Player%-(%d+)")))};
+	local res,name,realm,_ = {};
+	if object:find("^Player%-%d+") then -- object is guid
+		local realmId = tonumber(object:match("^Player%-(%d+)"));
+		if realmId then
+			res = {LRI:GetRealmInfoByID(realmId)}; -- realm info by realmId
+		end
+		if #res==0 then
+			local _, _, _, _, _, n, r = GetPlayerInfoByGUID(object);
+			if n then
+				realm = r~="" and r or myRealm;
+			end
+		end
 	end
 
-	if not (res and #res>0) then
-		if object:find("%-") then
+	if #res==0 then
+		if not realm and object:find("%-") and not object:find("^Player%-") then
 			_,realm = strsplit("-",object,2); -- character name + realm
 		end
 
@@ -134,18 +143,20 @@ local function GetRealmInfo(object)
 			realm = myRealm[2];
 		end
 
-		if replaceRealmNames[realm] then
-			realm = replaceRealmNames[realm];
-		end
-
 		if not LRI:GetCurrentRegion() then
 			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
 		end
 
-		res = {LRI:GetRealmInfo(realm,regionFix)};
+		if realm then
+			res = {LRI:GetRealmInfo(realm,regionFix)};
+
+			if #res==0 and replaceRealmNames[realm] then
+				res = {LRI:GetRealmInfo(replaceRealmNames[realm],regionFix)};
+			end
+		end
 	end
 
-	if not (res and #res>0) then
+	if #res==0 then
 		return;
 	end
 
@@ -309,8 +320,9 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	end
 	if unit and UnitIsPlayer(unit) then
 		guid = UnitGUID(unit);
+		name = UnitName(unit);
 		if guid then
-			AddLines(self,guid);
+			AddLines(self,guid or name);
 		end
 	end
 end);
