@@ -36,12 +36,15 @@ local tooltipLines = {
 
 local myRealm = {GetRealmName(),false};
 do
-	local pattern = "^"..(GetRealmName():gsub("(.)","%1*")).."$";
+	local pattern = "^"..(myRealm[1]:gsub("(.)","%1*")).."$";
 	for i,v in ipairs(GetAutoCompleteRealms()) do
 		if v:match(pattern) then
 			myRealm[2] = v;
 			break;
 		end
+	end
+	if not myRealm[2] then
+		myRealm[2] = myRealm[1]:gsub(" ",""):gsub("%-","");
 	end
 end
 
@@ -147,7 +150,7 @@ local function GetRealmInfo(object)
 			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
 		end
 
-		if realm then
+		if type(realm)=="string" and realm:len()>0 then
 			res = {LRI:GetRealmInfo(realm,regionFix)};
 
 			if #res==0 and replaceRealmNames[realm] then
