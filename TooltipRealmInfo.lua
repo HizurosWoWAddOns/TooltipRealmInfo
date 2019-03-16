@@ -341,7 +341,7 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	end
 	-- GroupFinder > ApplicantViewer > Tooltip
 	if owner_name and owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
-		AddLines(self,owner_name);
+		AddLines(self,name);
 	end
 end);
 
