@@ -46,6 +46,9 @@ do
 	if not myRealm[2] then
 		myRealm[2] = myRealm[1]:gsub(" ",""):gsub("%-","");
 	end
+	if not LRI:GetCurrentRegion() then
+		regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
+	end
 end
 
 local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
@@ -141,20 +144,18 @@ local function GetRealmInfo(object)
 		if not realm and object:find("%-") and not object:find("^Player%-") then
 			_,realm = strsplit("-",object,2); -- character name + realm
 		end
-
 		if not realm then
-			realm = myRealm[2];
+			realm = object;
 		end
-
-		if not LRI:GetCurrentRegion() then
-			regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
-		end
-
-		if type(realm)=="string" and realm:len()>0 then
-			res = {LRI:GetRealmInfo(realm,regionFix)};
-
-			if #res==0 and replaceRealmNames[realm] then
-				res = {LRI:GetRealmInfo(replaceRealmNames[realm],regionFix)};
+		for i,v in ipairs({object, myRealm[2]}) do
+			if type(v)=="string" and v:len()>0 then
+				res = {LRI:GetRealmInfo(v,regionFix)};
+				if #res==0 and replaceRealmNames[v] then
+					res = {LRI:GetRealmInfo(replaceRealmNames[v],regionFix)};
+				end
+				if #res>0 then
+					break;
+				end
 			end
 		end
 	end
