@@ -101,8 +101,7 @@ local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 
 function ns.print(...)
 	local colors,t,c = {"0099ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"},{},1;
-	for i,v in ipairs({...}) do
-		v = tostring(v);
+	for i,v in ipairs({tostringall(...)}) do
 		if i==1 and v~="" then
 			tinsert(t,C(addon,"ff"..colors[1])..":"); c=2;
 		end
@@ -135,7 +134,7 @@ local function GetRealmInfo(object)
 		if #res==0 then
 			local _, _, _, _, _, n, r = GetPlayerInfoByGUID(object);
 			if n then
-				realm = r~="" and r or myRealm;
+				realm = r:len()>0 and r or myRealm;
 			end
 		end
 	end
@@ -147,7 +146,7 @@ local function GetRealmInfo(object)
 		if not realm then
 			realm = object;
 		end
-		for i,v in ipairs({object, myRealm[2]}) do
+		for i,v in ipairs({realm, myRealm[2]}) do
 			if type(v)=="string" and v:len()>0 then
 				res = {LRI:GetRealmInfo(v,regionFix)};
 				if #res==0 and replaceRealmNames[v] then
