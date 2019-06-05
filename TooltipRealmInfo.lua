@@ -370,6 +370,11 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text)
 				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
 				AddLines(self,owner.memberInfo.name,nil,true)
 			end
+		elseif owner_name:find("^QuickJoinScrollFrameButton") and owner.entry and owner.entry.guid then
+			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
+			if leader then
+				AddLines(self,leader);
+			end
 		end
 	end
 end);
