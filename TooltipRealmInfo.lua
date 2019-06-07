@@ -349,9 +349,9 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 		if owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
 			AddLines(self,name);
 		elseif owner_name:find("^QuickJoinScrollFrameButton") then
-			local name2 = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
-			if name2 or name then
-				AddLines(self,name2 or name);
+			local name = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
+			if name then
+				AddLines(self,name);
 			end
 		end
 	end
