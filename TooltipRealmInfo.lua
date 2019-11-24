@@ -260,7 +260,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 				end
 			elseif v[1]=="connectedrealms" then
 				local names,color = {},"ffffff";
-				if realm[v[2]] and #realm[v[2]]>0 then
+				if realm[v[2]] and #realm[v[2]]>1 then
 					for i=1,#realm[v[2]] do
 						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],regionFix);
 						if realm_name == myRealm[1] then
@@ -357,7 +357,7 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 	end
 end);
 
-hooksecurefunc(GameTooltip,"AddLine",function(self,text)
+hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColoredLine
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
 	local owner, owner_name = self:GetOwner();
 	if owner then
@@ -372,11 +372,15 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text)
 			if leaderName then
 				AddLines(self,leaderName);
 			end
-		elseif owner_name:find("^CommunitiesFrameScrollChild") and owner.memberInfo and owner.memberInfo.clubType~=0 then -- Community member list tooltips
-			if text==owner.memberInfo.name then
+		elseif owner_name:find("^CommunitiesFrameScrollChild") then
+			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then -- Community member list tooltips
 				GameTooltip:ClearAllPoints();
 				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
 				AddLines(self,owner.memberInfo.name,nil,true)
+			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then -- Community applicant list tooltip
+				local r = owner:GetServerName();
+				GameTooltip:AddDoubleLine(FRIENDS_LIST_REALM, C((r and strlen(r)>0 and r) or GetRealmName(),"ffffffff"));
+				AddLines(self,owner:GetFullName(),nil,true);
 			end
 		elseif owner_name:find("^QuickJoinScrollFrameButton") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
@@ -418,17 +422,41 @@ end);
 
 -- Communities members - add country flags
 local function CommunitiesMemberList_RefreshListDisplay_Hook(self)
-	if not TooltipRealmInfoDB.communities_countryflag then return end
+	local clubInfo = CommunitiesFrame:GetSelectedClubInfo();
+	if not (TooltipRealmInfoDB.communities_countryflag and clubInfo and clubInfo.clubType==1) then
+		return;
+	end
+
 	local scrollFrame = self.ListScrollFrame;
 	local offset = HybridScrollFrame_GetOffset(scrollFrame);
 	local buttons = scrollFrame.buttons;
 	for i = 1, #buttons do
-		if buttons[i].memberInfo and buttons[i].memberInfo.name and buttons[i].memberInfo.clubType==1 then
+		if buttons[i].memberInfo and buttons[i].memberInfo.name then
 			local realm = GetRealmInfo(buttons[i].memberInfo.name);
 			if realm and #realm>0 then
 				buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
 				buttons[i]:UpdatePresence();
 				buttons[i]:UpdateNameFrame();
+			end
+		end
+	end
+end
+
+local function CommunitiesApplicantList_RefreshLayout_Hook(self)
+	local clubInfo = CommunitiesFrame:GetSelectedClubInfo();
+	if not (TooltipRealmInfoDB.communities_countryflag and clubInfo and clubInfo.clubType==1) then
+		return;
+	end
+
+	local scrollFrame = self.ListScrollFrame;
+	local offset = HybridScrollFrame_GetOffset(scrollFrame);
+	local buttons = scrollFrame.buttons;
+	for i = 1, #buttons do
+		if buttons[i].Info and buttons[i].Info.name then
+			local fullName = buttons[i]:GetFullName();
+			local realm = GetRealmInfo(fullName);
+			if realm and #realm>0 then
+				buttons[i].Name:SetText(realm[iconstr]..buttons[i].Info.name);
 			end
 		end
 	end
@@ -582,6 +610,7 @@ frame:SetScript("OnEvent",function(self,event,name)
 		end
 	elseif event=="ADDON_LOADED" and "Blizzard_Communities"==name then
 		hooksecurefunc(CommunitiesFrame.MemberList,"RefreshListDisplay",CommunitiesMemberList_RefreshListDisplay_Hook);
+		hooksecurefunc(CommunitiesFrame.ApplicantList,"RefreshLayout",CommunitiesApplicantList_RefreshLayout_Hook);
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
 		DST = t.isdst and 1 or 0;
