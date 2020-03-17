@@ -107,7 +107,7 @@ do
 		local t,c,a1 = {tostringall(...)},1,...;
 		if type(a1)=="boolean" then tremove(t,1); end
 		if a1~=false then
-			tinsert(t,1,"|cff0099ff"..((a1==true and addon_short) or (a1=="||" and "||") or addon).."|r"..(a1~="||" and ":" or ""));
+			tinsert(t,1,"|cff0099ff"..((a1==true and addon_short) or (a1=="||" and "||") or addon).."|r"..(a1~="||" and HEADER_COLON or ""));
 			c=2;
 		end
 		for i=c, #t do
@@ -173,15 +173,14 @@ local function GetRealmInfo(object)
 		res[locale] = "ptBR";
 	end
 
-	-- modify language codes
-	if res[region]=="EU" and res[locale]=="enUS" then
-		res[locale]="enGB"
-	elseif res[region]=="US" and res[timezone]=="AEST" then
-		res[locale]="enAU" -- australian
-	end
-
 	-- add icon
-	res[iconfile] = media..res[locale];
+	if res[region]=="EU" and res[locale]=="enUS" then
+		res[iconfile] = media.."enGB"; -- flag of Great Britain
+	elseif res[region]=="US" and res[timezone]=="AEST" then
+		res[iconfile] = media.."enAU"; -- flag of australian
+	else
+		res[iconfile] = media..res[locale];
+	end
 	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
 
 	-- modify rules
