@@ -18,18 +18,16 @@ externals:
 		tag: latest
 
 	libs/LibRealmInfo:
-		url: git://github.com/Phanx/LibRealmInfo.git
+		# url: git://github.com/Phanx/LibRealmInfo.git
+		url: git://github.com/janekjl/LibRealmInfo.git
 		tag: latest
 
 enable-nolib-creation: yes
 
 ignore:
 	- libs/LibStub/tests
-	- libs/LibStub/LibStub.toc
-	- libs/CallbackHandler-1.0/CallbackHandler-1.0.xml
 	- libs/LibRealmInfo/.gitignore
 	- libs/LibRealmInfo/.pkgmeta
-	- libs/LibRealmInfo/LibRealmInfo.toc
 	- libs/LibRealmInfo/README.md
 
 license-output: LICENSE.txt
