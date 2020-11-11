@@ -168,15 +168,13 @@ local function GetRealmInfo(object)
 		return;
 	end
 
-	-- replace ptPT because LFG_LIST_LANGUAGE_PTPT is missing...
-	if not LFG_LIST_LANGUAGE_PTPT and res[locale]=="ptPT" then
-		res[locale] = "ptBR";
+	-- modify locale
+	if res[region]=="EU" and res[locale]=="enUS" then
+		res[locale] = "enGB"; -- Great Britain
 	end
 
 	-- add icon
-	if res[region]=="EU" and res[locale]=="enUS" then
-		res[iconfile] = media.."enGB"; -- flag of Great Britain
-	elseif res[region]=="US" and res[timezone]=="AEST" then
+	if res[region]=="US" and res[timezone]=="AEST" then
 		res[iconfile] = media.."enAU"; -- flag of australian
 	else
 		res[iconfile] = media..res[locale];
