@@ -25,6 +25,30 @@ local dbDefaults = {
 	ttPlayer=true,
 	ttFriends=true
 };
+local modifierValues = {
+	[false] = VIDEO_OPTIONS_DISABLED,
+	[true] = VIDEO_OPTIONS_ENABLED,
+	A  = ALT_KEY,
+	AL = LALT_KEY_TEXT,
+	AR = RALT_KEY_TEXT,
+	C  = CTRL_KEY,
+	CL = LCTRL_KEY_TEXT,
+	CR = RCTRL_KEY_TEXT,
+	S  = SHIFT_KEY,
+	SL = LSHIFT_KEY_TEXT,
+	SR = RSHIFT_KEY_TEXT,
+}
+local isModifier,modifiers = false,{
+	A  = {LALT=1,RALT=1},
+	AL = {LALT=1},
+	AR = {RALT=1},
+	C  = {LCTRL=1,RCTRL=1},
+	CL = {LCTRL=1},
+	CR = {RCTRL=1},
+	S  = {LSHIFT=1,RSHIFT=1},
+	SL = {LSHIFT=1},
+	SR = {RSHIFT=1},
+};
 
 local tooltipLines = {
 	-- { <name of line in slash command>, <return table index from local GetRealmInfo function>, <name of line in tooltip> }
@@ -219,6 +243,16 @@ local function GetRealmInfo(object)
 	return res;
 end
 
+local function CheckLineVisibility(key)
+	local value = TooltipRealmInfoDB[key];
+	if type(value)=="boolean" then
+		return value;
+	elseif isModifier and modifiers[value] and modifiers[value][isModifier]==1 then
+		return true;
+	end
+	return false;
+end
+
 local function AddLines(tt,object,_title,newLineOnFlat)
 	if not _title then
 		_title = "%s: ";
@@ -243,7 +277,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 	end
 
 	for i,v in ipairs(tooltipLines)do
-		if TooltipRealmInfoDB[v[1]] then
+		if CheckLineVisibility(v[1]) then
 			local title,text = _title:format(L[v[3]]),"";
 			if v[1]=="language" then
 				local lCode = realm[v[2]]:upper();
@@ -505,20 +539,24 @@ local options = {
 					name = L["TTLinesDesc"]
 				},
 				timezone = {
-					type = "toggle", order = 2,
-					name = L["RlmTZ"]
+					type = "select", order = 1,
+					name = L["RlmTZ"], desc = L["RlmInfoDesc"],
+					values = modifierValues
 				},
 				type = {
-					type = "toggle", order = 3,
-					name = L["RlmType"]
+					type = "select", order = 2,
+					name = L["RlmType"], desc = L["RlmInfoDesc"],
+					values = modifierValues
 				},
 				language = {
-					type = "toggle", order = 4,
-					name = L["RlmLang"]
+					type = "select", order = 3,
+					name = L["RlmLang"], desc = L["RlmInfoDesc"],
+					values = modifierValues
 				},
 				connectedrealms = {
-					type = "toggle", order = 5,
-					name = L["RlmConn"]
+					type = "select", order = 4,
+					name = L["RlmConn"], desc = L["RlmInfoDesc"],
+					values = modifierValues
 				},
 				countryflag = {
 					type = "select", order = 6, width = "full",
@@ -589,7 +627,7 @@ function RegisterSlashCommand()
 	SLASH_TOOLTIPREALMINFO2 = L["CmdSlashStringShort"];
 end
 
-frame:SetScript("OnEvent",function(self,event,name)
+frame:SetScript("OnEvent",function(self,event,name,...)
 	if event=="ADDON_LOADED" and addon==name then
 		if TooltipRealmInfoDB==nil then
 			TooltipRealmInfoDB = {};
@@ -610,7 +648,11 @@ frame:SetScript("OnEvent",function(self,event,name)
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
 		DST = t.isdst and 1 or 0;
+	elseif event=="MODIFIER_STATE_CHANGED" then
+		local key, down = name,...;
+		isModifier = down==1 and key or false;
 	end
 end);
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
+frame:RegisterEvent("MODIFIER_STATE_CHANGED");
