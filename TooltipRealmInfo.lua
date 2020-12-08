@@ -596,7 +596,7 @@ local function RegisterOptionPanel()
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
 end
 
-function RegisterSlashCommand()
+local function RegisterSlashCommand()
 	function SlashCmdList.TOOLTIPREALMINFO(cmd)
 		local _print = function(key)
 			ns.print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
