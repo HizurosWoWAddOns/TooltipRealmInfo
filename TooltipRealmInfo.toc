@@ -6,6 +6,8 @@
 ## SavedVariables: TooltipRealmInfoDB
 ## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibRealmInfo
 
+## X-Curse-Project-ID: 99492
+
 #@no-lib-strip@
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
