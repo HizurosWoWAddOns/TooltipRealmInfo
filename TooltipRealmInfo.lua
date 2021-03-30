@@ -23,7 +23,14 @@ local dbDefaults = {
 	communities_countryflag=true,
 	ttGrpFinder=true,
 	ttPlayer=true,
-	ttFriends=true
+	ttFriends=true,
+	BG_countryflag = true,
+	CHANNEL_countryflag = true,
+	INSTANCE_countryflag = true,
+	PARTY_countryflag = true,
+	RAID_countryflag = true,
+	SAY_countryflag = true,
+	WHISPER_countryflag = true,
 };
 local modifierValues = {
 	[false] = VIDEO_OPTIONS_DISABLED,
@@ -146,6 +153,9 @@ do
 	end
 	function ns.debug(...)
 		ConsolePrint(date("|cff999999%X|r"),colorize(...));
+	end
+	function ns.debugPrint(...)
+		print(colorize("<debug>",...));
 	end
 end
 
@@ -451,6 +461,38 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	end
 end);
 
+-- ChatCountryFlags
+local CCF; CCF = {
+	events = {
+		CHAT_MSG_BG_SYSTEM_ALLIANCE="BG",CHAT_MSG_BG_SYSTEM_HORDE="BG",CHAT_MSG_BG_SYSTEM_NEUTRAL="BG",
+		CHAT_MSG_CHANNEL="CHANNEL",CHAT_MSG_COMMUNITIES_CHANNEL="CHANNEL",
+		CHAT_MSG_INSTANCE_CHAT="INSTANCE",CHAT_MSG_INSTANCE_CHAT_LEADER="INSTANCE",
+		CHAT_MSG_PARTY_LEADER="PARTY",CHAT_MSG_PARTY="PARTY",
+		CHAT_MSG_RAID_LEADER="RAID",CHAT_MSG_RAID="RAID",CHAT_MSG_RAID_WARNING="RAID",
+		CHAT_MSG_SAY="SAY",CHAT_MSG_YELL="SAY",
+		CHAT_MSG_WHISPER_INFORM="WHISPER",CHAT_MSG_WHISPER="WHISPER",
+	},
+	Register = function()
+		for event in pairs(CCF.events) do
+			ChatFrame_AddMessageEventFilter(event,CCF.Filter);
+		end
+	end,
+	Filter = function(self,event,...)
+		local args,dbkey,msg,guid,realmInfo = {...},CCF.events[event].."_countryflag",1,12;
+		if TooltipRealmInfoDB[dbkey] then
+			-- get realmInfo from player guid
+			if args[guid] and args[guid]:find("^Player%-%d+") then
+				realmInfo = GetRealmInfo(args[guid]);
+			end
+			-- add country flag to message
+			if realmInfo and realmInfo[iconstr] then
+				args[msg] = realmInfo[iconstr].." "..args[msg];
+			end
+		end
+		return false, unpack(args);
+	end,
+};
+
 -- Communities members - add country flags
 local function CommunitiesMemberList_RefreshListDisplay_Hook(self)
 	local clubInfo = CommunitiesFrame:GetSelectedClubInfo();
@@ -577,15 +619,45 @@ local options = {
 			inline = true,
 			args = {
 				finder_counryflag = {
-					type = "toggle",
-					name = LFGLIST_NAME,
-					desc = L["CtryFlgGrpFndrDesc"]
+					type = "toggle", order = 1,
+					name = LFGLIST_NAME, desc = L["CtryFlgGrpFndrDesc"]
 				},
 				communities_countryflag = {
-					type = "toggle",
-					name = COMMUNITIES,
-					desc = L["CtryFlgCommDesc"]
-				}
+					type = "toggle", order = 2,
+					name = COMMUNITIES, desc = L["CtryFlgCommDesc"]
+				},
+				chat_header = {
+					type = "header", order = 3,
+					name = L["CtryFlgChatHeader"],
+				},
+				BG_countryflag = {
+					type = "toggle", order = 10,
+					name = BATTLEGROUND, --desc = L["CtryFlgChatDescBG"]
+				},
+				INSTANCE_countryflag = {
+					type = "toggle", order = 10,
+					name = INSTANCE, --desc = L["CtryFlgChatDescINSTANCE"]
+				},
+				PARTY_countryflag = {
+					type = "toggle", order = 10,
+					name = PARTY, --desc = L["CtryFlgChatDescPARTY"]
+				},
+				RAID_countryflag = {
+					type = "toggle", order = 10,
+					name = RAID, --desc = L["CtryFlgChatDescRAID"]
+				},
+				CHANNEL_countryflag = {
+					type = "toggle", order = 10,
+					name = CHANNEL, --desc = L["CtryFlgChatDescCHANNEL"]
+				},
+				SAY_countryflag = {
+					type = "toggle", order = 10,
+					name = SAY, --desc = L["CtryFlgChatDescSAY"]
+				},
+				WHISPER_countryflag = {
+					type = "toggle", order = 10,
+					name = WHISPER, --desc = L["CtryFlgChatDescWHISPER"]
+				},
 			}
 		}
 	}
@@ -648,6 +720,7 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
 		DST = t.isdst and 1 or 0;
+		CCF.Register();
 	elseif event=="MODIFIER_STATE_CHANGED" then
 		local key, down = name,...;
 		isModifier = down==1 and key or false;

@@ -1,33 +1,33 @@
 package-as: TooltipRealmInfo
 
 externals:
-    libs/LibStub:
-        url: https://repos.wowace.com/wow/libstub/trunk
-        tag: latest
+   libs/LibStub:
+      url: https://repos.wowace.com/wow/libstub/trunk
+      tag: latest
 
-    libs/CallbackHandler-1.0:
-        url: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
-        tag: latest
+   libs/CallbackHandler-1.0:
+      url: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+      tag: latest
 
-    libs/AceGUI-3.0:
-        url: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
-        tag: latest
+   libs/AceGUI-3.0:
+      url: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
+      tag: latest
 
-    libs/AceConfig-3.0:
-        url: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
-        tag: latest
+   libs/AceConfig-3.0:
+      url: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
+      tag: latest
 
-    libs/LibRealmInfo:
-        # url: git://github.com/Phanx/LibRealmInfo.git
-        url: git://github.com/janekjl/LibRealmInfo.git
-        tag: latest
+   libs/LibRealmInfo:
+      # url: git://github.com/Phanx/LibRealmInfo.git
+      url: git://github.com/janekjl/LibRealmInfo.git
+      tag: latest
 
 enable-nolib-creation: yes
 
 ignore:
-    - libs/LibStub/tests
-    - libs/LibRealmInfo/.gitignore
-    - libs/LibRealmInfo/.pkgmeta
-    - libs/LibRealmInfo/README.md
+   - libs/LibStub/tests
+   - libs/LibRealmInfo/.gitignore
+   - libs/LibRealmInfo/.pkgmeta
+   - libs/LibRealmInfo/README.md
 
 license-output: LICENSE.txt
