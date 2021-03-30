@@ -1,4 +1,4 @@
-## Interface: 90002
+## Interface: 90005
 ## Title: Tooltip RealmInfo
 ## Notes: Append realm infos to some tooltips which containing player names with realm names
 ## Author: Hizuro
