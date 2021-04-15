@@ -485,7 +485,7 @@ local CCF; CCF = {
 				realmInfo = GetRealmInfo(args[guid]);
 			end
 			-- add country flag to message
-			if realmInfo and realmInfo[iconstr] then
+			if realmInfo and realmInfo[iconstr] and TooltipRealmInfoDB[realmInfo[locale].."_countryflag"] then
 				args[msg] = realmInfo[iconstr].." "..args[msg];
 			end
 		end
@@ -626,9 +626,13 @@ local options = {
 					type = "toggle", order = 2,
 					name = COMMUNITIES, desc = L["CtryFlgCommDesc"]
 				},
-				chat_header = {
+				countryflag_header = {
 					type = "header", order = 3,
 					name = L["CtryFlgChatHeader"],
+				},
+				countryflag_desc1 = {
+					type = "description", order = 4, fontSize = "medium",
+					name = C(L["CtryFlgChatDesc1"],"ffff8800")
 				},
 				BG_countryflag = {
 					type = "toggle", order = 10,
@@ -658,6 +662,11 @@ local options = {
 					type = "toggle", order = 10,
 					name = WHISPER, --desc = L["CtryFlgChatDescWHISPER"]
 				},
+				countryflag_desc2 = {
+					type = "description", order = 11, fontSize = "medium",
+					name = C(L["CtryFlgChatDesc2"],"ffff8800")
+				},
+
 			}
 		}
 	}
@@ -703,6 +712,18 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 	if event=="ADDON_LOADED" and addon==name then
 		if TooltipRealmInfoDB==nil then
 			TooltipRealmInfoDB = {};
+		end
+		local availableLanguages = C_LFGList.GetAvailableLanguageSearchFilter();
+		for i=1, #availableLanguages do
+			local v = availableLanguages[i];
+			local str = _G["LFG_LIST_LANGUAGE_"..v:upper()];
+			local k = v.."_countryflag";
+			local ctryflag = v;
+			if ctryflag=="enUS" and GetCurrentRegion()==3 then
+				ctryflag = "enGB";
+			end
+			options.args.country_flags.args[k] = {type="toggle",order=12,name="|T"..media..ctryflag..":0:2|t "..str};
+			dbDefaults[k] = true;
 		end
 		for k,v in pairs(dbDefaults)do
 			if TooltipRealmInfoDB[k]==nil then
