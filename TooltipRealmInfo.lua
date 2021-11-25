@@ -133,12 +133,12 @@ local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
 
 do
 	local addon_short = "TTRI";
-	local colors = {"0099ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"};
+	local colors = {"82c5ff","00ff00","ff6060","44ffff","ffff00","ff8800","ff44ff","ffffff"};
 	local function colorize(...)
 		local t,c,a1 = {tostringall(...)},1,...;
 		if type(a1)=="boolean" then tremove(t,1); end
 		if a1~=false then
-			tinsert(t,1,"|cff0099ff"..((a1==true and addon_short) or (a1=="||" and "||") or addon).."|r"..(a1~="||" and HEADER_COLON or ""));
+			tinsert(t,1,"|cff82c5ff"..((a1==true and addon_short) or (a1=="||" and "||") or addon).."|r"..(a1~="||" and HEADER_COLON or ""));
 			c=2;
 		end
 		for i=c, #t do
@@ -399,7 +399,8 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 end);
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColoredLine
-	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
+	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
+	-- text==nil required for bug in FrameXML/LFGList.lua line 3499. [ tooltip:AddLine(activityName); ] activityName is nil.
 	local owner, owner_name = self:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
