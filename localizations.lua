@@ -1,22 +1,15 @@
 
-local _, ns = ...;
+local L, addon, ns = {}, ...;
+ns.L = setmetatable(L,{__index=function(t,k)
+	local v = tostring(k);
+	rawset(t,k,v);
+	return v;
+end});
 
-local L = setmetatable({},{
-	__index=function(t,k)
-		local v=tostring(k);
-		rawset(t,k,v);
-		return v;
-	end
-});
-ns.L = L;
+-- Do you want to help localize this addon?
+-- https://www.curseforge.com/wow/addons/@cf-project-name@/localization
 
--- Hi. This addon needs your help for localization. :)
--- https://wow.curseforge.com/projects/tooltiprealminfo/localization
-
--- english localization
 --@localization(locale="enUS", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
--- /end of english localization
-
 if LOCALE_deDE then
 --@localization(locale="deDE", format="lua_additive_table", handle-subnamespaces="none", handle-unlocalized="ignore")@
 elseif LOCALE_esES then

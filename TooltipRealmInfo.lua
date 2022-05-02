@@ -549,6 +549,10 @@ local options = {
 	get = get_set,
 	set = get_set,
 	args = {
+		loadedmessage = {
+				type = "toggle", order = 0,
+				name = L["AddOnLoaded"], desc = L["AddOnLoadedDesc"].."|n|n|cff44ff44"..L["AddOnLoadedDescAlt"].."|r"
+		},
 		tooltips = {
 			type = "group", order = 1,
 			name = C(L["TTDisplay"],"ff0099ff"),
@@ -733,7 +737,7 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 		end
 		RegisterOptionPanel();
 		RegisterSlashCommand();
-		if TooltipRealmInfoDB.loadedmessage then
+		if TooltipRealmInfoDB.loadedmessage or IsShiftKeyDown() then
 			ns.print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
 	elseif event=="ADDON_LOADED" and "Blizzard_Communities"==name then
