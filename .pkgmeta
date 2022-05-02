@@ -18,8 +18,8 @@ externals:
       tag: latest
 
    libs/LibRealmInfo:
-      # url: git://github.com/Phanx/LibRealmInfo.git
-      url: git://github.com/janekjl/LibRealmInfo.git
+      # url: https://github.com/Phanx/LibRealmInfo.git
+      url: https://github.com/janekjl/LibRealmInfo.git
       tag: latest
 
 enable-nolib-creation: yes
