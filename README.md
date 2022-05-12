@@ -16,10 +16,7 @@ This AddOn appends realm infos to some tooltips which containing player names wi
 * Community member list tooltips
 
 # Screenshots
-[![TTRI Screenshot1](./.github/media/ttri_0t.jpg)](./.github/media/ttri_0.jpg)
-[![TTRI Screenshot2](./.github/media/ttri_1t.jpg)](./.github/media/ttri_1.jpg)
-[![TTRI Screenshot3](./.github/media/ttri_2t.jpg)](./.github/media/ttri_2.jpg)
-[![TTRI Screenshot4](./.github/media/ttri_3t.jpg)](./.github/media/ttri_3.jpg)
+[![TTRI Screenshot1](./.github/media/ttri_0t.jpg)](./.github/media/ttri_0.jpg) [![TTRI Screenshot2](./.github/media/ttri_1t.jpg)](./.github/media/ttri_1.jpg)  [![TTRI Screenshot3](./.github/media/ttri_2t.jpg)](./.github/media/ttri_2.jpg)  [![TTRI Screenshot4](./.github/media/ttri_3t.jpg)](./.github/media/ttri_3.jpg)
 
 # Chat command list
 Available commands for /ttri or /tooltiprealminfo
@@ -38,12 +35,17 @@ Show/Hide type line in tooltips
 
 # Credits
 This addon using LibRealmInfo developed by Phanx. Big thanks @ Phanx :-)
-Currently it need some help from asian users to complete the realm list.
-See LibRealmInfo on curseforge or github
+Forked by janekjl after Phanx has stopped development on it. Thanks @ janekjl :-)
+
+# Dependencies
+* [LibStub](https://www.curseforge.com/wow/addons/libstub)
+* [CallbackHandler-1.0](https://www.curseforge.com/wow/addons/callbackhandler)
+* [Ace3.0](https://www.curseforge.com/wow/addons/ace3)
+* [LibRealmInfo](https://github.com/janekjl/LibRealmInfo) from janekjl. Prev. [LibRealmInfo](https://github.com/Phanx/LibRealmInfo) from Phanx
 
 # My other projects
-> On Curseforge: https://www.curseforge.com/members/hizuro_de/projects
-> On Github: https://github.com/hizuro?tab=repositories
+* On Curseforge: https://www.curseforge.com/members/hizuro_de/projects
+* On Github: https://github.com/hizuro?tab=repositories
 
 # Donation would be nice :-)
-[![Patreon](https://img.shields.io/badge/Patreon-gray?logo=patreon&amp;style=for-the-badge)](https://www.patreon.com/bePatron?u=12558524) [![Paypal](https://img.shields.io/badge/Paypal-gray?logo=paypal&amp;style=for-the-badge)](https://www.paypal.com/cgi-bin/webscr?return=https://www.curseforge.com/members/hizuro_de/projects&amp;cancel_return=https://www.curseforge.com/members/hizuro_de/projects&amp;item_name=Hizuros+AddOns+on+curseforge&amp;cn=Add+special+instructions+to+the+addon+author()&amp;business=paypal%40hizuro.de&amp;bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted&amp;lc=US&amp;cmd=_donations&amp;rm=1&amp;no_shipping=1&amp;currency_code=USD)
+[![Patreon](https://img.shields.io/badge/Patreon-gray?logo=patreon&amp;style=for-the-badge)](https://www.patreon.com/bePatron?u=12558524) [![Paypal](https://img.shields.io/badge/Paypal-gray?logo=paypal&amp;style=for-the-badge)](https://paypal.me/hizuro)
