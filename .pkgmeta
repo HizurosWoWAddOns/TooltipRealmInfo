@@ -31,4 +31,3 @@ ignore:
    - libs/LibRealmInfo/README.md
    - .github
 
-#license-output: LICENSE.txt
