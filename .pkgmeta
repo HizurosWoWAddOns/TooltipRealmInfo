@@ -29,5 +29,6 @@ ignore:
    - libs/LibRealmInfo/.gitignore
    - libs/LibRealmInfo/.pkgmeta
    - libs/LibRealmInfo/README.md
+   - .github
 
-license-output: LICENSE.txt
+#license-output: LICENSE.txt
