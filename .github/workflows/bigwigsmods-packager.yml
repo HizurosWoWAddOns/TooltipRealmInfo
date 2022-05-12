@@ -1,4 +1,4 @@
-name: Github Actions - WoW AddOn Packaging
+name: WoW AddOn Packaging (by BigWigsMods/packager)
 on:
   push:
     tags:
@@ -16,6 +16,6 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v2
 
-      - name: Package and release (retail)
+      - name: Package and release
         uses: BigWigsMods/packager@v2
 
