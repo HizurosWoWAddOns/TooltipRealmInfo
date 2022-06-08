@@ -199,6 +199,7 @@ local function GetRealmInfo(object)
 	end
 
 	if #res==0 then
+		ns.debug("<GetRealmInfo>","<NoResultFor>",object);
 		return;
 	end
 
@@ -481,6 +482,7 @@ local CCF; CCF = {
 	Filter = function(self,event,...)
 		local args,dbkey,msg,guid,realmInfo = {...},CCF.events[event].."_countryflag",1,12;
 		if TooltipRealmInfoDB[dbkey] then
+			local added = false;
 			-- get realmInfo from player guid
 			if args[guid] and args[guid]:find("^Player%-%d+") then
 				realmInfo = GetRealmInfo(args[guid]);
@@ -488,6 +490,18 @@ local CCF; CCF = {
 			-- add country flag to message
 			if realmInfo and realmInfo[iconstr] and TooltipRealmInfoDB[realmInfo[locale].."_countryflag"] then
 				args[msg] = realmInfo[iconstr].." "..args[msg];
+				added = true;
+			end
+			if not added then
+				rI = "";
+				if realmInfo then
+					rI={};
+					for k,v in pairs(realmInfo)do
+						tinsert(rI,'"'..k..'":"'..tostring(v)..'"')
+					end
+					rI="{"..table.concat(rI,",").."}";
+				end
+				ns.debug("<CCF>",CCF[event],#args,args[guid],type(realmInfo),rI);
 			end
 		end
 		return false, unpack(args);
