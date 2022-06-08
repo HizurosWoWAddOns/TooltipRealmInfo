@@ -421,9 +421,9 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
 				AddLines(self,owner.memberInfo.name,nil,true)
 			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then -- Community applicant list tooltip
-				local r = owner:GetServerName();
-				GameTooltip:AddDoubleLine(FRIENDS_LIST_REALM, C((r and strlen(r)>0 and r) or GetRealmName(),"ffffffff"));
-				AddLines(self,owner:GetFullName(),nil,true);
+				local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
+				GameTooltip:AddDoubleLine(FRIENDS_LIST_REALM, C((realm and strlen(realm)>0 and realm) or GetRealmName(),"ffffffff"));
+				AddLines(self,name,nil,true);
 			end
 		elseif owner_name:find("^QuickJoinScrollFrameButton") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
