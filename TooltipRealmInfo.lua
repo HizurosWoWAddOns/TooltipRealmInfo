@@ -204,8 +204,12 @@ local function GetRealmInfo(object)
 	end
 
 	-- modify locale
-	if res[region]=="EU" and res[locale]=="enUS" then
-		res[locale] = "enGB"; -- Great Britain
+	if res[region]=="EU" then
+		if res[locale]=="enUS" then
+			res[locale] = "enGB"; -- Great Britain
+		elseif res[locale] = "ptBR" then
+			res[locale] = "ptPT"
+		end
 	end
 
 	-- add icon
