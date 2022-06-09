@@ -745,7 +745,7 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 				end
 			end
 			local key = v.."_countryflag";
-			options.args.country_flags.args[key] = {type="toggle",order=12,name="|T"..media..key..":0:2|t ".._G["LFG_LIST_LANGUAGE_"..availableLanguages[i]:upper()]};
+			options.args.country_flags.args[key] = {type="toggle",order=12,name="|T"..media..v..":0:2|t ".._G["LFG_LIST_LANGUAGE_"..availableLanguages[i]:upper()]};
 			dbDefaults[key] = true;
 		end
 		for k,v in pairs(dbDefaults)do
