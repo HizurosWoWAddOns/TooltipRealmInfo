@@ -493,15 +493,7 @@ local CCF; CCF = {
 				added = true;
 			end
 			if not added then
-				rI = "";
-				if realmInfo then
-					rI={};
-					for k,v in pairs(realmInfo)do
-						tinsert(rI,'"'..k..'":"'..tostring(v)..'"')
-					end
-					rI="{"..table.concat(rI,",").."}";
-				end
-				ns.debug("<CCF>",CCF[event],#args,args[guid],type(realmInfo),rI);
+				ns.debug("<CCF>",CCF.events[event],#args,args[guid],realmInfo[locale].."_countryflag",TooltipRealmInfoDB[realmInfo[locale].."_countryflag"]);
 			end
 		end
 		return false, unpack(args);
@@ -735,13 +727,21 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 		local availableLanguages = C_LFGList.GetAvailableLanguageSearchFilter();
 		for i=1, #availableLanguages do
 			local v = availableLanguages[i];
-			local str = _G["LFG_LIST_LANGUAGE_"..v:upper()];
-			local k = v.."_countryflag";
-			local ctryflag = v;
-			if ctryflag=="enUS" and GetCurrentRegion()==3 then
-				ctryflag = "enGB";
+			if GetCurrentRegion()==3 then
+				if v=="enUS" then
+					v = "enGB";
+					if TooltipRealmInfoDB.enUS~=nil then -- TODO: delete me
+						TooltipRealmInfoDB.enGB, TooltipRealmInfoDB.enUS = TooltipRealmInfoDB.enUS;
+					end
+				elseif v=="ptBR" then
+					v = "ptPT";
+					if TooltipRealmInfoDB.ptBR~=nil then -- TODO: delete me
+						TooltipRealmInfoDB.ptPT, TooltipRealmInfoDB.ptBR = TooltipRealmInfoDB.ptBR;
+					end
+				end
 			end
-			options.args.country_flags.args[k] = {type="toggle",order=12,name="|T"..media..ctryflag..":0:2|t "..str};
+			local key = v.."_countryflag";
+			options.args.country_flags.args[k] = {type="toggle",order=12,name="|T"..media..key..":0:2|t ".._G["LFG_LIST_LANGUAGE_"..availableLanguages[i]:upper()]};
 			dbDefaults[k] = true;
 		end
 		for k,v in pairs(dbDefaults)do
