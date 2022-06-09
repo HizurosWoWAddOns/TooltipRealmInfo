@@ -207,7 +207,7 @@ local function GetRealmInfo(object)
 	if res[region]=="EU" then
 		if res[locale]=="enUS" then
 			res[locale] = "enGB"; -- Great Britain
-		elseif res[locale] = "ptBR" then
+		elseif res[locale]=="ptBR" then
 			res[locale] = "ptPT"
 		end
 	end
