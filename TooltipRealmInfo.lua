@@ -470,9 +470,6 @@ local CCF; CCF = {
 				args[msg] = realmInfo[iconstr].." "..args[msg];
 				added = true;
 			end
-			if not added then
-				ns.debug("<CCF>",CCF.events[event],#args,args[guid],realmInfo[locale].."_countryflag",TooltipRealmInfoDB[realmInfo[locale].."_countryflag"]);
-			end
 		end
 		return false, unpack(args);
 	end,
