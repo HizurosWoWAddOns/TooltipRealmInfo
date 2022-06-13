@@ -511,7 +511,7 @@ local function CommunitiesApplicantList_RefreshLayout_Hook(self)
 	local buttons = scrollFrame.buttons;
 	for i = 1, #buttons do
 		if buttons[i].Info and buttons[i].Info.name then
-			local realm = GetRealmInfo(buttons[i]:GetServerName());
+			local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(buttons[i].Info.playerGUID);
 			if realm and #realm>0 then
 				buttons[i].Name:SetText(realm[iconstr]..buttons[i].Info.name);
 			end
