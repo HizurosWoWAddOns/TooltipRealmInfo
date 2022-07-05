@@ -155,7 +155,7 @@ local function GetRealmInfo(object)
 
 	if #res==0 then
 		if not realm and object:find("%-") and not object:find("^Player%-") then
-			_,realm = strsplit("-",object,2); -- character name + realm
+			_,realm,_ = strsplit("- ",object,3); -- character name + realm + faction (optional)
 		end
 		if not realm then
 			realm = object;
