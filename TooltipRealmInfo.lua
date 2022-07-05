@@ -3,8 +3,9 @@ TooltipRealmInfoDB = {};
 local addon, ns = ...;
 local L = ns.L;
 local C = WrapTextInColorCode;
-ns.addon_short = "TTRI"
-ns.debugMode = "@project-version@" == "@".."project-version".."@"
+
+ns.debugMode = "@project-version@"=="@".."project-version".."@";
+LibStub("HizurosSharedTools").RegisterPrint(ns,addon,"TTRI");
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
@@ -173,7 +174,7 @@ local function GetRealmInfo(object)
 	end
 
 	if #res==0 then
-		ns.debug("<GetRealmInfo>","<NoResultFor>",object);
+		ns:debug("<GetRealmInfo>","<NoResultFor>",object);
 		return;
 	end
 
@@ -656,8 +657,8 @@ local options = {
 			}
 		},
 		credits = {
-			type = "group", order = 200,
-			name = L["Credits"],
+			type = "group", order = 200, inline = true,
+			name = L["Credit"],
 			args = {}
 		},
 	}
@@ -665,14 +666,15 @@ local options = {
 
 local function RegisterOptionPanel()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(addon, options);
-	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
-	ns.AddCredits(options.args.credits.args);
+	local opts = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
+	--LibStub("HizurosSharedTools").BlizzOptions_ExpandOnShow(opts);
+	LibStub("HizurosSharedTools").AddCredit(addon,options.args.credits.args);
 end
 
 local function RegisterSlashCommand()
 	function SlashCmdList.TOOLTIPREALMINFO(cmd)
 		local _print = function(key)
-			ns.print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
+			ns:print( L[ TooltipRealmInfoDB[key] and "CmdNowIsShown" or "CmdNowIsHidden"]:format(L[key]) );
 		end
 		local cmd, arg = strsplit(" ", cmd, 2);
 		cmd = cmd:lower();
@@ -682,17 +684,17 @@ local function RegisterSlashCommand()
 			_print(cmd);
 		elseif cmd=="loadedmessage" then
 			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
-			ns.print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
+			ns:print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 		elseif cmd=="config" then
 			InterfaceOptionsFrame_OpenToCategory(addon);
 			InterfaceOptionsFrame_OpenToCategory(addon);
 		else
-			ns.print(L["CmdListInfo"]);
+			ns:print(L["CmdListInfo"]);
 			for i,v in ipairs({"timezone","language","type","connectedrealms"})do
-				ns.print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
+				ns:print("", v, "|cffffff00-", L[TooltipRealmInfoDB[v] and "CmdListOptHide" or "CmdListOptShow"]:format(L[v]));
 			end
-			ns.print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
-			ns.print("","config","|cffffff00-",L["CmdListOptions"]);
+			ns:print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
+			ns:print("","config","|cffffff00-",L["CmdListOptions"]);
 		end
 	end
 
@@ -733,7 +735,7 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 		RegisterOptionPanel();
 		RegisterSlashCommand();
 		if TooltipRealmInfoDB.loadedmessage or IsShiftKeyDown() then
-			ns.print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
+			ns:print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
 	elseif event=="ADDON_LOADED" and "Blizzard_Communities"==name then
 		hooksecurefunc(CommunitiesFrame.MemberList,"RefreshListDisplay",CommunitiesMemberList_RefreshListDisplay_Hook);

@@ -9,7 +9,7 @@
 ![Sponsors](https://img.shields.io/github/sponsors/HizurosWoWAddOns?logo=github&style=flat-square)
 
 ## Description
-Adds realm informations to tooltips and country flags to chat channels or several character lists like friends, groupfinter and more.
+Adds realm informations to tooltips and country flags to chat channels or several character lists like friends, groupfinder and more.
 
 [![TTRI Screenshot1](./.github/media/ttri_0t.jpg)](./.github/media/ttri_0.jpg) [![TTRI Screenshot2](./.github/media/ttri_1t.jpg)](./.github/media/ttri_1.jpg)  [![TTRI Screenshot3](./.github/media/ttri_2t.jpg)](./.github/media/ttri_2.jpg)  [![TTRI Screenshot4](./.github/media/ttri_3t.jpg)](./.github/media/ttri_3.jpg)
 

@@ -4,23 +4,21 @@
 ## Author: Hizuro
 ## Version: @project-version@
 ## SavedVariables: TooltipRealmInfoDB
-## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibRealmInfo
+## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibRealmInfo, LibColors-1.0
 
 ## X-Curse-Project-ID: 99492
 ## X-Wago-ID: 0mNwOBNo
 
-#@no-lib-strip@
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 libs\AceGUI-3.0\AceGUI-3.0.xml
 libs\AceConfig-3.0\AceConfig-3.0.xml
-#@end-no-lib-strip@
-
 libs\LibRealmInfo\LibRealmInfo.lua
+libs\LibColors-1.0\LibColors-1.0.xml
+libs\HizurosSharedTools\HizurosSharedTools.lua
 
 localizations.lua
 #@do-not-package@
 localizations.workfile.lua
 #@end-do-not-package@
-libs/HizurosSharedTools/HizurosSharedTools.lua
 TooltipRealmInfo.lua

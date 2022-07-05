@@ -22,8 +22,12 @@ externals:
         url: https://github.com/janekjl/LibRealmInfo.git
         tag: latest
 
+    libs/LibColors-1.0:
+        url: https://github.com/HizurosWoWAddOns/LibColors-1.0.git
+        tag: latest
+
     libs/HizurosSharedTools:
-        url: https://github.com/HizurosWoWAddOns/.github
+        url: https://github.com/HizurosWoWAddOns/HizurosSharedTools.git
 
 enable-nolib-creation: no
 
@@ -32,6 +36,14 @@ ignore:
     - libs/LibRealmInfo/.gitignore
     - libs/LibRealmInfo/.pkgmeta
     - libs/LibRealmInfo/README.md
-    - libs/HizurosSharedTools/profile
+    - libs/LibColors-1.0/.pkgmeta
+    - libs/LibColors-1.0/colors_fed_standard_595.lua
+    - libs/LibColors-1.0/colors_web.lua
+    - libs/LibColors-1.0/colors_x11.lua
+    - libs/LibColors-1.0/LibColors-1.0-all.xml
+    - libs/LibColors-1.0/LibColors-1.0-fed595.xml
+    - libs/LibColors-1.0/LibColors-1.0-web.xml
+    - libs/LibColors-1.0/LibColors-1.0-x11.xml
+    - libs/LibColors-1.0/LibColors-1.0.toc
     - libs/HizurosSharedTools/README.md
 
