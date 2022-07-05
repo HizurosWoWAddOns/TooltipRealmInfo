@@ -10,7 +10,7 @@ LibStub("HizurosSharedTools").RegisterPrint(ns,addon,"TTRI");
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
 
-local frame, media = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
+local frame, media, blizzOptPanel = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
 local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT:gsub("%(","%%("):gsub("%)","%%)"):gsub("%%s","(.*)");
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
@@ -666,9 +666,9 @@ local options = {
 
 local function RegisterOptionPanel()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(addon, options);
-	local opts = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
-	--LibStub("HizurosSharedTools").BlizzOptions_ExpandOnShow(opts);
-	LibStub("HizurosSharedTools").AddCredit(addon,options.args.credits.args);
+	blizzOptPanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
+	LibStub("HizurosSharedTools").BlizzOptions_ExpandOnShow(blizzOptPanel);
+	LibStub("HizurosSharedTools").AddCredit(addon); -- options.args.credits.args
 end
 
 local function RegisterSlashCommand()
@@ -686,8 +686,7 @@ local function RegisterSlashCommand()
 			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
 			ns:print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 		elseif cmd=="config" then
-			InterfaceOptionsFrame_OpenToCategory(addon);
-			InterfaceOptionsFrame_OpenToCategory(addon);
+			LibStub("HizurosSharedTools").InterfaceOptionsFrame_OpenToCategory(addon);
 		else
 			ns:print(L["CmdListInfo"]);
 			for i,v in ipairs({"timezone","language","type","connectedrealms"})do
