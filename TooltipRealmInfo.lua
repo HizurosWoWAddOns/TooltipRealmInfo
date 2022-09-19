@@ -347,12 +347,8 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 			unit = mf.unit;
 		end
 	end
-	if unit and UnitIsPlayer(unit) then
-		guid = UnitGUID(unit);
-		name = UnitName(unit);
-		if guid then
-			AddLines(self,guid or name);
-		end
+	if unit and (UnitIsPlayer(unit) then
+		AddLines(self,UnitGUID(unit) or UnitName(unit));
 	end
 end);
 
