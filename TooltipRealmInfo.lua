@@ -473,41 +473,41 @@ local CCF; CCF = {
 };
 
 -- Communities members - add country flags
-local function CommunitiesMemberList_RefreshListDisplay_Hook(self)
+local function CommunitiesFrame_MemberList_ScrollBox_Update(x) -- retail / df
 	local clubInfo = CommunitiesFrame:GetSelectedClubInfo();
 	if not (TooltipRealmInfoDB.communities_countryflag and clubInfo and clubInfo.clubType==1) then
 		return;
 	end
-
-	local scrollFrame = self.ListScrollFrame;
-	local offset = HybridScrollFrame_GetOffset(scrollFrame);
-	local buttons = scrollFrame.buttons;
-	for i = 1, #buttons do
-		if buttons[i].memberInfo and buttons[i].memberInfo.name then
-			local realm = GetRealmInfo(buttons[i].memberInfo.name);
-			if realm and #realm>0 then
-				buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
-				buttons[i]:UpdatePresence();
-				buttons[i]:UpdateNameFrame();
+	local buttons = CommunitiesFrame.MemberList.ScrollBox:GetFrames();
+	if buttons and #buttons>0 then
+		for i = 1, #buttons do
+			if buttons[i].memberInfo and buttons[i].memberInfo.name then
+				local realm = GetRealmInfo(buttons[i].memberInfo.name);
+				if realm and #realm>0 then
+					buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
+					buttons[i]:UpdatePresence();
+					buttons[i]:UpdateNameFrame();
+				end
 			end
 		end
 	end
 end
 
-local function CommunitiesApplicantList_RefreshLayout_Hook(self)
+local function CommunitiesFrame_MemberList_ListScrollFrame_Update() -- classic ?
 	local clubInfo = CommunitiesFrame:GetSelectedClubInfo();
 	if not (TooltipRealmInfoDB.communities_countryflag and clubInfo and clubInfo.clubType==1) then
 		return;
 	end
-
-	local scrollFrame = self.ListScrollFrame;
-	local offset = HybridScrollFrame_GetOffset(scrollFrame);
-	local buttons = scrollFrame.buttons;
-	for i = 1, #buttons do
-		if buttons[i].Info and buttons[i].Info.name then
-			local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(buttons[i].Info.playerGUID);
-			if realm and #realm>0 then
-				buttons[i].Name:SetText(realm[iconstr]..buttons[i].Info.name);
+	local buttons = CommunitiesFrame.MemberList.ListScrollFrame.buttons;
+	if buttons and #buttons>0 then
+		for i = 1, #buttons do
+			if buttons[i].memberInfo and buttons[i].memberInfo.name then
+				local realm = GetRealmInfo(buttons[i].memberInfo.name);
+				if realm and #realm>0 then
+					buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
+					buttons[i]:UpdatePresence();
+					buttons[i]:UpdateNameFrame();
+				end
 			end
 		end
 	end
@@ -733,8 +733,11 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 			ns:print(L["AddOnLoaded"],"","\n",L["CmdOnLoadInfo"]);
 		end
 	elseif event=="ADDON_LOADED" and "Blizzard_Communities"==name then
-		hooksecurefunc(CommunitiesFrame.MemberList,"RefreshListDisplay",CommunitiesMemberList_RefreshListDisplay_Hook);
-		hooksecurefunc(CommunitiesFrame.ApplicantList,"RefreshLayout",CommunitiesApplicantList_RefreshLayout_Hook);
+		if CommunitiesFrame.MemberList.ScrollBox then
+			hooksecurefunc(CommunitiesFrame.MemberList.ScrollBox,"Update",CommunitiesFrame_MemberList_ScrollBox_Update);
+		elseif CommunitiesFrame.MemberList.ListScrollFrame then
+			hooksecurefunc(CommunitiesFrame.MemberList.ListScrollFrame,"Update",CommunitiesFrame_MemberList_ListScrollFrame_Update);
+		end
 	elseif event=="PLAYER_LOGIN" then
 		local t = date("*t");
 		DST = t.isdst and 1 or 0;
