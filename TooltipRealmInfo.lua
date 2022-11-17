@@ -338,7 +338,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 end
 
 -- some gametooltip scripts/funcion hooks
-GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(self,...)
 	if not TooltipRealmInfoDB.ttPlayer then return end
 	local name, unit, guid, realm = self:GetUnit();
 	if not unit then
