@@ -338,8 +338,9 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 end
 
 -- some gametooltip scripts/funcion hooks
-GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
 	if not TooltipRealmInfoDB.ttPlayer then return end
+	local self = GameTooltip
 	local name, unit, guid, realm = self:GetUnit();
 	if not unit then
 		local mf = GetMouseFocus();
@@ -352,8 +353,7 @@ GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
 	end
 end);
 
-hooksecurefunc(GameTooltip,"SetText",function(self,name)
-	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
+local function GetObjOwnerName(self)
 	local owner, owner_name = self:GetOwner();
 	if owner then
 		owner_name = owner:GetName();
@@ -361,11 +361,21 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 			owner_name = owner:GetDebugName();
 		end
 	end
-	-- GroupFinder > ApplicantViewer > Tooltip
+	return owner,owner_name;
+end
+
+hooksecurefunc(GameTooltip,"SetText",function(self,name)
+	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
+	local owner, owner_name = GetObjOwnerName(self);
 	if owner_name then
-		if owner_name:find("^LFGListApplicationViewerScrollFrameButton") then
-			AddLines(self,name);
-		elseif owner_name:find("^QuickJoinScrollFrameButton") then
+		if owner_name:find("^LFGListFrame%.ApplicationViewer%.ScrollBox%.ScrollTarget%.[a-z0-9]*%.Member[0-9]*") then
+			-- GroupFinder > ApplicantViewer > Tooltip
+			local button = owner:GetParent();
+			if button and button.applicantID and owner.memberIdx then
+				local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole, relationship, dungeonScore, pvpItemLevel = C_LFGList.GetApplicantMemberInfo(button.applicantID, owner.memberIdx);
+				AddLines(self,name);
+			end
+		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") then
 			local name = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
 			if name then
 				AddLines(self,name);
@@ -377,30 +387,26 @@ end);
 hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColoredLine
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
 	-- text==nil required for bug in FrameXML/LFGList.lua line 3499. [ tooltip:AddLine(activityName); ] activityName is nil.
-	local owner, owner_name = self:GetOwner();
-	if owner then
-		owner_name = owner:GetName();
-		if not owner_name then
-			owner_name = owner:GetDebugName();
-		end
-	end
+	local owner, owner_name = GetObjOwnerName(self);
 	if owner_name then
-		if owner_name:find("^LFGListSearchPanelScrollFrameButton") then -- GroupFinder > SearchResult > Tooltip
+		if owner_name:find("^LFGListFrame%.SearchPanel%.ScrollBox%.ScrollTarget%.[a-z0-9]*") then
+			-- GroupFinder > SearchResult > Tooltip
 			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
 			if leaderName then
 				AddLines(self,leaderName);
 			end
-		elseif owner_name:find("^CommunitiesFrameScrollChild") then
-			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then -- Community member list tooltips
-				GameTooltip:ClearAllPoints();
-				GameTooltip:SetPoint("RIGHT",owner,"LEFT",0,0);
+		elseif owner_name:find("^CommunitiesFrame%.MemberList%.ScrollBox%.ScrollTarget") then
+			-- Communities > MemberList > Tooltip
+			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then
+				-- Community member list tooltips
 				AddLines(self,owner.memberInfo.name,nil,true)
-			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then -- Community applicant list tooltip
+			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then
+				-- Community applicant list tooltip
 				local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
 				GameTooltip:AddDoubleLine(FRIENDS_LIST_REALM, C((realm and strlen(realm)>0 and realm) or GetRealmName(),"ffffffff"));
 				AddLines(self,name,nil,true);
 			end
-		elseif owner_name:find("^QuickJoinScrollFrameButton") and owner.entry and owner.entry.guid then
+		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
 			if leader then
 				AddLines(self,leader);
