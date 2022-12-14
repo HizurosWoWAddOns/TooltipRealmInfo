@@ -338,20 +338,28 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 end
 
 -- some gametooltip scripts/funcion hooks
-TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
-	if not TooltipRealmInfoDB.ttPlayer then return end
-	local self = GameTooltip
-	local name, unit, guid, realm = self:GetUnit();
-	if not unit then
-		local mf = GetMouseFocus();
-		if mf and mf.unit then
-			unit = mf.unit;
+do
+	local ttDone = nil;
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
+		if ttDone==true or not TooltipRealmInfoDB.ttPlayer then return end
+		ttDone = true;
+		local self = GameTooltip
+		local name, unit, guid, realm = self:GetUnit();
+		if not unit then
+			local mf = GetMouseFocus();
+			if mf and mf.unit then
+				unit = mf.unit;
+			end
 		end
-	end
-	if unit and UnitIsPlayer(unit) then
-		AddLines(self,UnitGUID(unit) or UnitName(unit));
-	end
-end);
+		if unit and UnitIsPlayer(unit) then
+			AddLines(self,UnitGUID(unit) or UnitName(unit));
+		end
+	end);
+
+	GameTooltip:HookScript("OnTooltipCleared", function(self)
+		ttDone = nil
+	end)
+end
 
 local function GetObjOwnerName(self)
 	local owner, owner_name = self:GetOwner();
