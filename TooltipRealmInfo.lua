@@ -426,7 +426,7 @@ end);
 -- Friend list tooltip
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
 	if locked or (not TooltipRealmInfoDB.ttFriends) then return end
-	if yOffset == -4 and text:find(_FRIENDS_LIST_REALM) then
+	if yOffset == -4 and text and text:find(_FRIENDS_LIST_REALM) then
 		local realmName = text:match(_FRIENDS_LIST_REALM);
 		if realmName then
 			local realm = GetRealmInfo(realmName);
