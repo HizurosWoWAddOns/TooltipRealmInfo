@@ -419,6 +419,8 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 			if leader then
 				AddLines(self,leader);
 			end
+		elseif owner_name:find("^BuffFrame%.AuraContainer") then
+			-- do not add lines!!!
 		end
 	end
 end);
