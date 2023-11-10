@@ -724,14 +724,8 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 			if GetCurrentRegion()==3 then
 				if v=="enUS" then
 					v = "enGB";
-					if TooltipRealmInfoDB.enUS~=nil then -- TODO: delete me
-						TooltipRealmInfoDB.enGB, TooltipRealmInfoDB.enUS = TooltipRealmInfoDB.enUS;
-					end
 				elseif v=="ptBR" then
 					v = "ptPT";
-					if TooltipRealmInfoDB.ptBR~=nil then -- TODO: delete me
-						TooltipRealmInfoDB.ptPT, TooltipRealmInfoDB.ptBR = TooltipRealmInfoDB.ptBR;
-					end
 				end
 			end
 			local key = v.."_countryflag";
