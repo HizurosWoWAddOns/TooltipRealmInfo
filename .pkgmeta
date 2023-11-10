@@ -29,11 +29,6 @@ externals:
     libs/HizurosSharedTools:
         url: https://github.com/HizurosWoWAddOns/HizurosSharedTools.git
 
-# missing externals on addon page
-required-dependencies:
-    - libstringcoloring-1-0
-    - librealminfo
-
 enable-nolib-creation: no
 
 ignore:
