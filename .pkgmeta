@@ -1,33 +1,14 @@
 package-as: TooltipRealmInfo
 
 externals:
-    libs/LibStub:
-        url: https://repos.wowace.com/wow/libstub/trunk
-        tag: latest
-
-    libs/CallbackHandler-1.0:
-        url: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
-        tag: latest
-
-    libs/AceGUI-3.0:
-        url: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
-        tag: latest
-
-    libs/AceConfig-3.0:
-        url: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
-        tag: latest
-
-    libs/LibRealmInfo:
-        # url: https://github.com/Phanx/LibRealmInfo.git
-        url: https://github.com/janekjl/LibRealmInfo.git
-        tag: latest
-
-    libs/LibColors-1.0:
-        url: https://github.com/HizurosWoWAddOns/LibColors-1.0.git
-        tag: latest
-
-    libs/HizurosSharedTools:
-        url: https://github.com/HizurosWoWAddOns/HizurosSharedTools.git
+    libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
+    libs/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+    libs/AceGUI-3.0: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
+    libs/AceConfig-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
+    #libs/LibRealmInfo: https://github.com/Phanx/LibRealmInfo
+    libs/LibRealmInfo: https://github.com/janekjl/LibRealmInfo
+    libs/LibColors-1.0: https://github.com/HizurosWoWAddOns/LibColors-1.0
+    libs/HizurosSharedTools: https://github.com/HizurosWoWAddOns/HizurosSharedTools
 
 enable-nolib-creation: no
 
