@@ -454,6 +454,21 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	end
 end);
 
+-- premate groups
+hooksecurefunc("LFGListSearchEntry_Update",function(button)
+	if not TooltipRealmInfoDB.finder_counryflag then return end
+	local realm,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
+	if searchResultInfo and searchResultInfo.leaderName then
+		realm = GetRealmInfo(searchResultInfo.leaderName);
+	end
+	if realm and #realm>0 then
+		local cur = button.Name:GetText();
+		if not cur:match(addon) then
+			button.Name:SetText(realm[iconstr]..cur)
+		end
+	end
+end)
+
 -- ChatCountryFlags
 local CCF; CCF = {
 	events = {
