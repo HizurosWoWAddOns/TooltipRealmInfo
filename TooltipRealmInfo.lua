@@ -12,7 +12,10 @@ local LRI = LibStub("LibRealmInfo");
 
 local frame, media, blizzOptPanel = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
-local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT:gsub("%(","%%("):gsub("%)","%%)"):gsub("%%s","(.*)");
+local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*) %((.*)%)"; -- SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT:gsub("%(","%%("):gsub("%)","%%)"):gsub("%%s","(.*)");
+if LOCALE_zhTW then
+	_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*)%((.*)%)";
+end
 local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
 local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3,BRT=-3};
 local dbDefaults = {
@@ -338,7 +341,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 end
 
 -- some gametooltip scripts/funcion hooks
-do
+if TooltipDataProcessor then
 	local ttDone = nil;
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
 		if ttDone==true or not TooltipRealmInfoDB.ttPlayer then return end
@@ -424,6 +427,27 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 		end
 	end
 end);
+
+if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
+	GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+		if not TooltipRealmInfoDB.ttPlayer then return end
+		local name, unit, guid, realm = self:GetUnit();
+		if not unit then
+			local mf = GetMouseFocus();
+			if mf and mf.unit then
+				unit = mf.unit;
+			end
+		end
+		if unit and UnitIsPlayer(unit) then
+			guid = UnitGUID(unit);
+			name = UnitName(unit);
+			if guid then
+				AddLines(self,guid or name);
+			end
+		end
+	end);
+end
+
 
 -- Friend list tooltip
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
@@ -638,7 +662,7 @@ local options = {
 				},
 				communities_countryflag = {
 					type = "toggle", order = 2,
-					name = COMMUNITIES, desc = L["CtryFlgCommDesc"]
+					name = COMMUNITIES or L["Communities"], desc = L["CtryFlgCommDesc"]
 				},
 				countryflag_header = {
 					type = "header", order = 3,
