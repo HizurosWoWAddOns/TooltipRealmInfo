@@ -6,7 +6,8 @@ externals:
     libs/AceGUI-3.0: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
     libs/AceConfig-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
     #libs/LibRealmInfo: https://github.com/Phanx/LibRealmInfo
-    libs/LibRealmInfo: https://github.com/janekjl/LibRealmInfo
+    #libs/LibRealmInfo: https://github.com/janekjl/LibRealmInfo
+    libs/LibRealmInfo: https://github.com/HizurosWoWAddOns/LibRealmInfo
     libs/LibColors-1.0: https://github.com/HizurosWoWAddOns/LibColors-1.0
     libs/HizurosSharedTools: https://github.com/HizurosWoWAddOns/HizurosSharedTools
 
