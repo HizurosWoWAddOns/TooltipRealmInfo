@@ -16,7 +16,7 @@ local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*) %((.*)%)"; -- SOCIAL_QUEUE
 if LOCALE_zhTW then
 	_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*)%((.*)%)";
 end
-local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13;
+local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13; -- LibRealmInfo:GetRealmInfo()
 local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3,BRT=-3};
 local dbDefaults = {
 	timezone=false,
@@ -89,151 +89,85 @@ do
 	end
 end
 
-local replaceRealmNames	 = { -- <api> = <LibRealmInfo compatible>
-	["AeriePeak"] = "Aerie Peak", ["AltarofStorms"] = "Altar of Storms", ["AlteracMountains"] = "Alterac Mountains",
-	["AmanThul"] = "Aman'Thul", ["Anubarak"] = "Anub'arak", ["Area52"] = "Area 52", ["ArgentDawn"] = "Argent Dawn",
-	["BlackDragonflight"] = "Black Dragonflight", ["BlackwaterRaiders"] = "Blackwater Raiders", ["BlackwingLair"] = "Blackwing Lair",
-	["BladesEdge"] = "Blade's Edge", ["BleedingHollow"] = "Bleeding Hollow", ["BloodFurnace"] = "Blood Furnace",
-	["BoreanTundra"] = "Borean Tundra", ["BurningBlade"] = "Burning Blade", ["BurningLegion"] = "Burning Legion",
-	["CenarionCircle"] = "Cenarion Circle", ["Chogall"] = "Cho'gall", ["DarkIron"] = "Dark Iron", ["DathRemar"] = "Dath'Remar",
-	["DemonSoul"] = "Demon Soul", ["DrakTharon"] = "Drak'Tharon", ["Drakthul"] = "Drak'thul", ["EarthenRing"] = "Earthen Ring",
-	["EchoIsles"] = "Echo Isles", ["EldreThalas"] = "Eldre'Thalas", ["EmeraldDream"] = "Emerald Dream",
-	["GrizzlyHills"] = "Grizzly Hills", ["Guldan"] = "Gul'dan", ["JubeiThos"] = "Jubei'Thos", ["Kaelthas"] = "Kael'thas",
-	["KelThuzad"] = "Kel'Thuzad", ["KhazModan"] = "Khaz Modan", ["Khazgoroth"] = "Khaz'goroth", ["Kiljaeden"] = "Kil'jaeden",
-	["KirinTor"] = "Kirin Tor", ["KulTiras"] = "Kul Tiras", ["LaughingSkull"] = "Laughing Skull",
-	["LightningsBlade"] = "Lightning's Blade", ["MalGanis"] = "Mal'Ganis", ["MokNathal"] = "Mok'Nathal", ["MoonGuard"] = "Moon Guard",
-	["Mugthol"] = "Mug'thol", ["Nerzhul"] = "Ner'zhul", ["QuelThalas"] = "Quel'Thalas", ["Queldorei"] = "Quel'dorei",
-	["ScarletCrusade"] = "Scarlet Crusade", ["Senjin"] = "Sen'jin", ["ShadowCouncil"] = "Shadow Council",
-	["ShatteredHalls"] = "Shattered Halls", ["ShatteredHand"] = "Shattered Hand", ["Shuhalo"] = "Shu'halo", ["SilverHand"] = "Silver Hand",
-	["SistersofElune"] = "Sisters of Elune", ["SteamwheedleCartel"] = "Steamwheedle Cartel", ["TheForgottenCoast"] = "The Forgotten Coast",
-	["TheScryers"] = "The Scryers", ["TheUnderbog"] = "The Underbog", ["TheVentureCo"] = "The Venture Co",
-	["ThoriumBrotherhood"] = "Thorium Brotherhood", ["TolBarad"] = "Tol Barad", ["TwistingNether"] = "Twisting Nether",
-	["Veknilash"] = "Vek'nilash", ["WyrmrestAccord"] = "Wyrmrest Accord", ["Zuljin"] = "Zul'jin", ["AeriePeak"] = "Aerie Peak",
-	["AggraPortuguês"] = "Aggra (Português)", ["AhnQiraj"] = "Ahn'Qiraj", ["AlAkir"] = "Al'Akir", ["AmanThul"] = "Aman'Thul",
-	["Anubarak"] = "Anub'arak", ["Area52"] = "Area 52", ["ArgentDawn"] = "Argent Dawn", ["Ясеневыйлес"] = "Ясеневый лес",
-	["ЧерныйШрам"] = "Черный Шрам", ["BladesEdge"] = "Blade's Edge", ["Пиратскаябухта"] = "Пиратская бухта",
-	["Борейскаятундра"] = "Борейская тундра", ["BronzeDragonflight"] = "Bronze Dragonflight", ["BurningBlade"] = "Burning Blade",
-	["BurningLegion"] = "Burning Legion", ["BurningSteppes"] = "Burning Steppes", ["CThun"] = "C'Thun", ["ChamberofAspects"] = "Chamber of Aspects",
-	["Chantséternels"] = "Chants éternels", ["Chogall"] = "Cho'gall", ["ColinasPardas"] = "Colinas Pardas",
-	["ConfrérieduThorium"] = "Confrérie du Thorium", ["ConseildesOmbres"] = "Conseil des Ombres", ["CultedelaRivenoire"] = "Culte de la Rive noire",
-	["DarkmoonFaire"] = "Darkmoon Faire", ["DasKonsortium"] = "Das Konsortium", ["DasSyndikat"] = "Das Syndikat", ["СтражСмерти"] = "Страж Смерти",
-	["ТкачСмерти"] = "Ткач Смерти", ["DefiasBrotherhood"] = "Defias Brotherhood", ["DerMithrilorden"] = "Der Mithrilorden",
-	["DerRatvonDalaran"] = "Der Rat von Dalaran", ["DerabyssischeRat"] = "Der abyssische Rat", ["DieAldor"] = "Die Aldor",
-	["DieArguswacht"] = "Die Arguswacht", ["DieNachtwache"] = "Die Nachtwache", ["DieSilberneHand"] = "Die Silberne Hand",
-	["DieTodeskrallen"] = "Die Todeskrallen", ["DieewigeWacht"] = "Die ewige Wacht", ["Drakthul"] = "Drak'thul", ["DrekThar"] = "Drek'Thar",
-	["DunModr"] = "Dun Modr", ["DunMorogh"] = "Dun Morogh", ["EarthenRing"] = "Earthen Ring", ["EldreThalas"] = "Eldre'Thalas",
-	["EmeraldDream"] = "Emerald Dream", ["ВечнаяПесня"] = "Вечная Песня", ["FestungderStürme"] = "Festung der Stürme", ["GrimBatol"] = "Grim Batol",
-	["Guldan"] = "Gul'dan", ["Ревущийфьорд"] = "Ревущий фьорд", ["Kaelthas"] = "Kael'thas", ["KelThuzad"] = "Kel'Thuzad",
-	["KhazModan"] = "Khaz Modan", ["Khazgoroth"] = "Khaz'goroth", ["Kiljaeden"] = "Kil'jaeden", ["KirinTor"] = "Kirin Tor", ["Korgall"] = "Kor'gall",
-	["Kragjin"] = "Krag'jin", ["KulTiras"] = "Kul Tiras", ["KultderVerdammten"] = "Kult der Verdammten",
-	["LaCroisadeécarlate"] = "La Croisade écarlate", ["LaughingSkull"] = "Laughing Skull", ["LesClairvoyants"] = "Les Clairvoyants",
-	["LesSentinelles"] = "Les Sentinelles", ["Корольлич"] = "Король-лич", ["LightningsBlade"] = "Lightning's Blade", ["LosErrantes"] = "Los Errantes",
-	["MalGanis"] = "Mal'Ganis", ["MarécagedeZangar"] = "Marécage de Zangar", ["Mugthol"] = "Mug'thol", ["Nerzhul"] = "Ner'zhul",
-	["Nerathor"] = "Nera'thor", ["PozzodellEternità"] = "Pozzo dell'Eternità", ["QuelThalas"] = "Quel'Thalas", ["ScarshieldLegion"] = "Scarshield Legion",
-	["Senjin"] = "Sen'jin", ["ShatteredHalls"] = "Shattered Halls", ["ShatteredHand"] = "Shattered Hand", ["Shendralar"] = "Shen'dralar",
-	["СвежевательДуш"] = "Свежеватель Душ", ["SteamwheedleCartel"] = "Steamwheedle Cartel", ["TarrenMill"] = "Tarren Mill",
-	["Templenoir"] = "Temple noir", ["TheMaelstrom"] = "The Maelstrom", ["TheShatar"] = "The Sha'tar", ["TheVentureCo"] = "The Venture Co",
-	["ThrokFeroth"] = "Throk'Feroth", ["TwilightsHammer"] = "Twilight's Hammer", ["TwistingNether"] = "Twisting Nether", ["UnGoro"] = "Un'Goro",
-	["Veklor"] = "Vek'lor", ["Veknilash"] = "Vek'nilash", ["Voljin"] = "Vol'jin", ["ZirkeldesCenarius"] = "Zirkel des Cenarius", ["Zuljin"] = "Zul'jin"
-};
-
 local function GetRealmInfo(object)
 	if not (type(object)=="string" and object:trim():len()>0) then
 		return false;
 	end
 
-	local res,name,realm,_ = {};
-	if object:find("^Player%-%d+") then -- object is guid
-		local realmId = tonumber(object:match("^Player%-(%d+)"));
-		if realmId then
-			res = {LRI:GetRealmInfoByID(realmId)}; -- realm info by realmId
+	local realmName,_ = object or "";
+	if object:match("Player%-") then -- player guid string
+		_, _, _, _, _, _, realmName = GetPlayerInfoByGUID(object);
+	elseif object and strlen(object)>0 and object:match("%-") then -- name-realm string
+		_,realmName = strsplit("-",object,2);
+		if (realmName and strlen(realmName)==0) or realmName==nil then
+			realmName = myRealm[1];
 		end
-		if #res==0 then
-			local _, _, _, _, _, n, r = GetPlayerInfoByGUID(object);
-			if n then
-				realm = r:len()>0 and r or myRealm;
-			end
-		end
+	else
+		realmName = object or myRealm[1];
 	end
 
-	if #res==0 then
-		if not realm and object:find("%-") and not object:find("^Player%-") then
-			_,realm,_ = strsplit("- ",object,3); -- character name + realm + faction (optional)
-		end
-		if not realm then
-			realm = object;
-		end
-		for i,v in ipairs({realm, myRealm[2]}) do
-			if type(v)=="string" and v:len()>0 then
-				res = {LRI:GetRealmInfo(v,regionFix)};
-				if #res==0 and replaceRealmNames[v] then
-					res = {LRI:GetRealmInfo(replaceRealmNames[v],regionFix)};
-				end
-				if #res>0 then
-					break;
-				end
-			end
-		end
-	end
+	--ns:debug("TTRI","<GetRealmInfo>",object,realmName)
 
-	if #res==0 then
-		ns:debug("<GetRealmInfo>","<NoResultFor>",object);
+	local realmInfo = {LRI:GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1],regionFix)}
+
+	if #realmInfo==0 then
+		ns:debug("<GetRealmInfo>","<NoResultFor>",object,realmName);
 		return;
 	end
 
 	-- modify locale
-	if res[region]=="EU" then
-		if res[locale]=="enUS" then
-			res[locale] = "enGB"; -- Great Britain
-		elseif res[locale]=="ptBR" then
-			res[locale] = "ptPT"
+	if realmInfo[region]=="EU" then
+		if realmInfo[locale]=="enUS" then
+			realmInfo[locale] = "enGB"; -- Great Britain
+		elseif realmInfo[locale]=="ptBR" then
+			realmInfo[locale] = "ptPT"
 		end
 	end
 
 	-- add icon
-	if res[region]=="US" and res[timezone]=="AEST" then
-		res[iconfile] = media.."enAU"; -- flag of australian
+	if realmInfo[region]=="US" and realmInfo[timezone]=="AEST" then
+		realmInfo[iconfile] = media.."enAU"; -- flag of australian
 	else
-		res[iconfile] = media..res[locale];
+		realmInfo[iconfile] = media..realmInfo[locale];
 	end
-	res[iconstr] = "|T"..res[iconfile]..":0:2|t";
+	realmInfo[iconstr] = "|T"..realmInfo[iconfile]..":0:2|t";
 
 	-- modify rules
-	local rules_l = res[rules]:lower();
+	local rules_l = realmInfo[rules]:lower();
 	if rules_l=="rp" or rules_l=="rppvp" then
-		res[rules] = "RP PvE";
+		realmInfo[rules] = "RP PvE";
 	elseif rules_l=="pvp" then
-		res[rules] = "PvE";
+		realmInfo[rules] = "PvE";
 	else
-		res[rules] = gsub(res[rules],"V","v");
+		realmInfo[rules] = gsub(realmInfo[rules],"V","v");
 	end
 
 	-- modify timezones
-	if not res[timezone] then
-		if res[region]=="EU" then
-			if res[locale]=="enGB" or res[locale]=="ptPT" then
-				res[timezone] = 0 + DST;
+	if not realmInfo[timezone] then
+		if realmInfo[region]=="EU" then
+			if realmInfo[locale]=="enGB" or realmInfo[locale]=="ptPT" then
+				realmInfo[timezone] = 0 + DST;
 			elseif locale=="ruRU" then
-				res[timezone] = 3; -- no DST
+				realmInfo[timezone] = 3; -- no DST
 			else
-				res[timezone] = 1 + DST;
+				realmInfo[timezone] = 1 + DST;
 			end
-		elseif res[region]=="CN" or res[region]=="TW" then
-			res[timezone] = 8;
+		elseif realmInfo[region]=="CN" or realmInfo[region]=="TW" then
+			realmInfo[timezone] = 8;
 		else
-			res[timezone] = 9;
+			realmInfo[timezone] = 9;
 		end
 	else
-		res[timezone] = Code2UTC[res[timezone]] + DST;
+		realmInfo[timezone] = Code2UTC[realmInfo[timezone]] + DST;
 	end
 
-	if not res[timezone] then
-		res[timezone] = "Unknown";
+	if not realmInfo[timezone] then
+		realmInfo[timezone] = "Unknown";
 	else
-		res[timezone] = "UTC" .. ( (res[timezone]==0 and " ") or (res[timezone]<0 and "-") or "+" ) .. res[timezone];
+		realmInfo[timezone] = "UTC" .. ( (realmInfo[timezone]==0 and " ") or (realmInfo[timezone]<0 and "-") or "+" ) .. realmInfo[timezone];
 	end
 
-	return res;
+	return realmInfo;
 end
 
 local function CheckLineVisibility(key)
@@ -251,21 +185,16 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		_title = "%s: ";
 	end
 
-	local objType,realm,_=type(object);
-	if objType=="table" then
-		realm = object;
-	elseif objType=="string" then
-		realm = GetRealmInfo(object);
-	end
+	local realmInfo = GetRealmInfo(object);
 
-	if not (type(realm)=="table" and #realm>0) then
+	if not (type(realmInfo)=="table" and #realmInfo>0) then
 		return false;
 	end
 
-	if realm[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
+	if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
 		local ttName = tt:GetName();
 		if ttName then
-			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realm[iconstr]);
+			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realmInfo[iconstr]);
 		end
 	end
 
@@ -273,20 +202,20 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		if CheckLineVisibility(v[1]) then
 			local title,text = _title:format(L[v[3]]),"";
 			if v[1]=="language" then
-				local lCode = realm[v[2]]:upper();
+				local lCode = realmInfo[v[2]]:upper();
 				if _G["LFG_LIST_LANGUAGE_"..lCode]~=nil or _G[lCode]~=nil then
 					text = text .. (_G["LFG_LIST_LANGUAGE_"..lCode] or _G[lCode]);
-					if realm[iconstr] and TooltipRealmInfoDB.countryflag=="languageline" then
-						text = text .. realm[iconstr];
+					if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="languageline" then
+						text = text .. realmInfo[iconstr];
 					end
 				else
-					text = text .. realm[v[2]].."?";
+					text = text .. realmInfo[v[2]].."?";
 				end
 			elseif v[1]=="connectedrealms" then
 				local names,color = {},"ffffff";
-				if realm[v[2]] and #realm[v[2]]>1 then
-					for i=1,#realm[v[2]] do
-						local _, realm_name = LRI:GetRealmInfoByID(realm[v[2]][i],regionFix);
+				if realmInfo[v[2]] and #realmInfo[v[2]]>1 then
+					for i=1,#realmInfo[v[2]] do
+						local _, realm_name = LRI:GetRealmInfoByID(realmInfo[v[2]][i],regionFix);
 						if realm_name == myRealm[1] then
 							color="00ff00";
 						end
@@ -318,8 +247,8 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 					end
 					text = "";
 				end
-			elseif v[2] and realm[v[2]] then
-				text = text .. realm[v[2]];
+			elseif v[2] and realmInfo[v[2]] then
+				text = text .. realmInfo[v[2]];
 			end
 			if text:len()>0 then
 				if type(tt)=="string" then
@@ -333,35 +262,48 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		end
 	end
 
-	if realm[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
-		tt:AddLine(realm[iconstr]);
+	if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
+		tt:AddLine(realmInfo[iconstr]);
 	end
 
 	return tt;
 end
 
 -- some gametooltip scripts/funcion hooks
+local function _OnTooltipSetUnit(self)
+	local _, unit, mf = self:GetUnit();
+	if not unit then
+		if GetMouseFoci then
+			mf = GetMouseFoci()[1];
+		else
+			mf = GetMouseFocus();
+		end
+		if mf and mf.unit then
+			unit = mf.unit;
+		end
+	end
+	if unit and UnitIsPlayer(unit) then
+		local _,realm = UnitName(unit)
+		AddLines(self,realm or myRealm[1]); -- realm string
+	end
+end
+
 if TooltipDataProcessor then
 	local ttDone = nil;
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
 		if ttDone==true or not TooltipRealmInfoDB.ttPlayer then return end
 		ttDone = true;
-		local self = GameTooltip
-		local name, unit, guid, realm = self:GetUnit();
-		if not unit then
-			local mf = GetMouseFocus();
-			if mf and mf.unit then
-				unit = mf.unit;
-			end
-		end
-		if unit and UnitIsPlayer(unit) then
-			AddLines(self,UnitGUID(unit) or UnitName(unit));
-		end
+		_OnTooltipSetUnit(GameTooltip)
 	end);
 
 	GameTooltip:HookScript("OnTooltipCleared", function(self)
 		ttDone = nil
 	end)
+else--if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
+	GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+		if not TooltipRealmInfoDB.ttPlayer then return end
+		_OnTooltipSetUnit(self);
+	end);
 end
 
 local function GetObjOwnerName(self)
@@ -383,13 +325,13 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 			-- GroupFinder > ApplicantViewer > Tooltip
 			local button = owner:GetParent();
 			if button and button.applicantID and owner.memberIdx then
-				local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole, relationship, dungeonScore, pvpItemLevel = C_LFGList.GetApplicantMemberInfo(button.applicantID, owner.memberIdx);
-				AddLines(self,name);
+				local appName = C_LFGList.GetApplicantMemberInfo(button.applicantID, owner.memberIdx);
+				AddLines(self,appName); -- name-realm string
 			end
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") then
-			local name = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
-			if name then
-				AddLines(self,name);
+			local toonName = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
+			if toonName then
+				AddLines(self,toonName); -- name-realm string
 			end
 		end
 	end
@@ -404,23 +346,23 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 			-- GroupFinder > SearchResult > Tooltip
 			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
 			if leaderName then
-				AddLines(self,leaderName);
+				AddLines(self,leaderName); -- name-realm string
 			end
 		elseif owner_name:find("^CommunitiesFrame%.MemberList%.ScrollBox%.ScrollTarget") then
 			-- Communities > MemberList > Tooltip
 			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then
 				-- Community member list tooltips
-				AddLines(self,owner.memberInfo.name,nil,true)
+				AddLines(self,owner.memberInfo.name,nil,true) -- name-realm string
 			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then
 				-- Community applicant list tooltip
-				local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
+				local _, _, _, _, _, _, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
 				GameTooltip:AddDoubleLine(FRIENDS_LIST_REALM, C((realm and strlen(realm)>0 and realm) or GetRealmName(),"ffffffff"));
-				AddLines(self,name,nil,true);
+				AddLines(self,realm,nil,true); -- realm string
 			end
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
 			if leader then
-				AddLines(self,leader);
+				AddLines(self,leader); -- name-realm string
 			end
 		elseif owner_name:find("^BuffFrame%.AuraContainer") then
 			-- do not add lines!!!
@@ -428,40 +370,19 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 	end
 end);
 
-if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
-	GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
-		if not TooltipRealmInfoDB.ttPlayer then return end
-		local name, unit, guid, realm = self:GetUnit();
-		if not unit then
-			local mf = GetMouseFocus();
-			if mf and mf.unit then
-				unit = mf.unit;
-			end
-		end
-		if unit and UnitIsPlayer(unit) then
-			guid = UnitGUID(unit);
-			name = UnitName(unit);
-			if guid then
-				AddLines(self,guid or name);
-			end
-		end
-	end);
-end
-
-
 -- Friend list tooltip
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
 	if locked or (not TooltipRealmInfoDB.ttFriends) then return end
 	if yOffset == -4 and text and text:find(_FRIENDS_LIST_REALM) then
-		local realmName = text:match(_FRIENDS_LIST_REALM);
+		local ttLineStr,realmName = nil,text:match(_FRIENDS_LIST_REALM);
 		if realmName then
-			local realm = GetRealmInfo(realmName);
-			if realm and #realm>0 then
-				FriendsTooltip.height = FriendsTooltip.height - line:GetHeight(); -- remove prev. added line height
-				locked=true;
-				FriendsFrameTooltip_SetLine(line, anchor, AddLines(text,realm,NORMAL_FONT_COLOR_CODE.."%s:|r "), yOffset);
-				locked=false;
-			end
+			ttLineStr = AddLines(text,realmName,NORMAL_FONT_COLOR_CODE.."%s:|r "); -- realm string
+		end
+		if ttLineStr then
+			FriendsTooltip.height = FriendsTooltip.height - line:GetHeight(); -- remove prev. added line height
+			locked=true;
+			FriendsFrameTooltip_SetLine(line, anchor, ttLineStr, yOffset);
+			locked=false;
 		end
 	end
 end);
@@ -469,11 +390,11 @@ end);
 -- Groupfinder applicants (only country flags in scroll frame)
 hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
-	local name,_,_,_,_,_,_,_,_,_,relationship = C_LFGList.GetApplicantMemberInfo(id, index);
+	local name = C_LFGList.GetApplicantMemberInfo(id, index);
 	if name then
-		local realm = GetRealmInfo(name);
-		if realm and #realm>0 then
-			member.Name:SetText(realm[iconstr]..member.Name:GetText());
+		local realmInfo = GetRealmInfo(name);
+		if realmInfo and #realmInfo>0 then
+			member.Name:SetText(realmInfo[iconstr]..member.Name:GetText());
 		end
 	end
 end);
@@ -481,14 +402,14 @@ end);
 -- premate groups
 hooksecurefunc("LFGListSearchEntry_Update",function(button)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
-	local realm,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
+	local realmInfo,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
 	if searchResultInfo and searchResultInfo.leaderName then
-		realm = GetRealmInfo(searchResultInfo.leaderName);
+		realmInfo = GetRealmInfo(searchResultInfo.leaderName);
 	end
-	if realm and #realm>0 then
+	if realmInfo and #realmInfo>0 then
 		local cur = button.Name:GetText();
 		if not cur:match(addon) then
-			button.Name:SetText(realm[iconstr]..cur)
+			button.Name:SetText(realmInfo[iconstr]..cur)
 		end
 	end
 end)
@@ -512,7 +433,6 @@ local CCF; CCF = {
 	Filter = function(self,event,...)
 		local args,dbkey,msg,guid,realmInfo = {...},CCF.events[event].."_countryflag",1,12;
 		if TooltipRealmInfoDB[dbkey] then
-			local added = false;
 			-- get realmInfo from player guid
 			if args[guid] and args[guid]:find("^Player%-%d+") then
 				realmInfo = GetRealmInfo(args[guid]);
@@ -520,7 +440,6 @@ local CCF; CCF = {
 			-- add country flag to message
 			if realmInfo and realmInfo[iconstr] and TooltipRealmInfoDB[realmInfo[locale].."_countryflag"] then
 				args[msg] = realmInfo[iconstr].." "..args[msg];
-				added = true;
 			end
 		end
 		return false, unpack(args);
@@ -537,9 +456,9 @@ local function CommunitiesFrame_MemberList_ScrollBox_Update(x) -- retail / df
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realm = GetRealmInfo(buttons[i].memberInfo.name);
-				if realm and #realm>0 then
-					buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
+				local realmInfo = GetRealmInfo(buttons[i].memberInfo.name);
+				if realmInfo and #realmInfo>0 then
+					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
 					buttons[i]:UpdateNameFrame();
 				end
@@ -557,9 +476,9 @@ local function CommunitiesFrame_MemberList_ListScrollFrame_Update() -- classic ?
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realm = GetRealmInfo(buttons[i].memberInfo.name);
-				if realm and #realm>0 then
-					buttons[i].NameFrame.Name:SetText(realm[iconstr]..buttons[i].memberInfo.name);
+				local realmInfo = GetRealmInfo(buttons[i].memberInfo.name);
+				if realmInfo and #realmInfo>0 then
+					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
 					buttons[i]:UpdateNameFrame();
 				end
@@ -708,7 +627,7 @@ local options = {
 			}
 		},
 		credits = {
-			type = "group", order = 200, inline = true,
+			type = "group", order = 200, inline = true, hidden = true,
 			name = L["Credit"],
 			args = {}
 		},
@@ -768,7 +687,7 @@ frame:SetScript("OnEvent",function(self,event,name,...)
 				end
 			end
 			local key = v.."_countryflag";
-			options.args.country_flags.args[key] = {type="toggle",order=12,name="|T"..media..v..":0:2|t ".._G["LFG_LIST_LANGUAGE_"..availableLanguages[i]:upper()]};
+			options.args.country_flags.args[key] = {type="toggle",order=12,name="|T"..media..v..":0:2|t ".._G["LFG_LIST_LANGUAGE_"..v:upper()]};
 			dbDefaults[key] = true;
 		end
 		for k,v in pairs(dbDefaults)do
