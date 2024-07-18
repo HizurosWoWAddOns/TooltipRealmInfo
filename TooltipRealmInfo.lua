@@ -72,7 +72,7 @@ local tooltipLines = {
 	{"connectedrealms",connections,"RlmConn"}
 };
 
-local myRealm = {GetRealmName(),false};
+local myRealm = {GetRealmName(),nil};
 do
 	local pattern = "^"..(myRealm[1]:gsub("(.)","%1*")).."$";
 	for i,v in ipairs(GetAutoCompleteRealms()) do
@@ -87,6 +87,11 @@ do
 	if not LRI:GetCurrentRegion() then
 		regionFix = ({"US","KR","EU","TW","CN"})[GetCurrentRegion()];
 	end
+end
+
+local function GetRealmFromNameString(str)
+	local _,realmName = strsplit("-",str,2);
+	return (realmName and strlen(realmName)>0 and realmName) or myRealm[1];
 end
 
 local function GetRealmInfo(object)
@@ -326,12 +331,12 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 			local button = owner:GetParent();
 			if button and button.applicantID and owner.memberIdx then
 				local appName = C_LFGList.GetApplicantMemberInfo(button.applicantID, owner.memberIdx);
-				AddLines(self,appName); -- name-realm string
+				AddLines(self,GetRealmFromNameString(appName)); -- name-realm string
 			end
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") then
 			local toonName = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
 			if toonName then
-				AddLines(self,toonName); -- name-realm string
+				AddLines(self,GetRealmFromNameString(toonName)); -- name-realm string
 			end
 		end
 	end
@@ -346,13 +351,13 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 			-- GroupFinder > SearchResult > Tooltip
 			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
 			if leaderName then
-				AddLines(self,leaderName); -- name-realm string
+				AddLines(self,GetRealmFromNameString(leaderName)); -- name-realm string
 			end
 		elseif owner_name:find("^CommunitiesFrame%.MemberList%.ScrollBox%.ScrollTarget") then
 			-- Communities > MemberList > Tooltip
 			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then
 				-- Community member list tooltips
-				AddLines(self,owner.memberInfo.name,nil,true) -- name-realm string
+				AddLines(self,GetRealmFromNameString(owner.memberInfo.name),nil,true) -- name-realm string
 			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then
 				-- Community applicant list tooltip
 				local _, _, _, _, _, _, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
@@ -362,7 +367,7 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
 			if leader then
-				AddLines(self,leader); -- name-realm string
+				AddLines(self,GetRealmFromNameString(leader)); -- name-realm string
 			end
 		elseif owner_name:find("^BuffFrame%.AuraContainer") then
 			-- do not add lines!!!
@@ -392,7 +397,7 @@ hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member
 	if not TooltipRealmInfoDB.finder_counryflag then return end
 	local name = C_LFGList.GetApplicantMemberInfo(id, index);
 	if name then
-		local realmInfo = GetRealmInfo(name);
+		local realmInfo = GetRealmInfo(GetRealmFromNameString(name));
 		if realmInfo and #realmInfo>0 then
 			member.Name:SetText(realmInfo[iconstr]..member.Name:GetText());
 		end
@@ -404,7 +409,7 @@ hooksecurefunc("LFGListSearchEntry_Update",function(button)
 	if not TooltipRealmInfoDB.finder_counryflag then return end
 	local realmInfo,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
 	if searchResultInfo and searchResultInfo.leaderName then
-		realmInfo = GetRealmInfo(searchResultInfo.leaderName);
+		realmInfo = GetRealmInfo(GetRealmFromNameString(searchResultInfo.leaderName));
 	end
 	if realmInfo and #realmInfo>0 then
 		local cur = button.Name:GetText();
@@ -435,7 +440,8 @@ local CCF; CCF = {
 		if TooltipRealmInfoDB[dbkey] then
 			-- get realmInfo from player guid
 			if args[guid] and args[guid]:find("^Player%-%d+") then
-				realmInfo = GetRealmInfo(args[guid]);
+				local _, _, _, _, _, _, realmName = GetPlayerInfoByGUID(args[guid]);
+				realmInfo = GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1]);
 			end
 			-- add country flag to message
 			if realmInfo and realmInfo[iconstr] and TooltipRealmInfoDB[realmInfo[locale].."_countryflag"] then
@@ -456,7 +462,7 @@ local function CommunitiesFrame_MemberList_ScrollBox_Update(x) -- retail / df
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realmInfo = GetRealmInfo(buttons[i].memberInfo.name);
+				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
 				if realmInfo and #realmInfo>0 then
 					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
@@ -476,7 +482,7 @@ local function CommunitiesFrame_MemberList_ListScrollFrame_Update() -- classic ?
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realmInfo = GetRealmInfo(buttons[i].memberInfo.name);
+				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
 				if realmInfo and #realmInfo>0 then
 					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
