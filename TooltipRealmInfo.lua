@@ -393,31 +393,35 @@ hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffse
 end);
 
 -- Groupfinder applicants (only country flags in scroll frame)
-hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
-	if not TooltipRealmInfoDB.finder_counryflag then return end
-	local name = C_LFGList.GetApplicantMemberInfo(id, index);
-	if name then
-		local realmInfo = GetRealmInfo(GetRealmFromNameString(name));
-		if realmInfo and #realmInfo>0 then
-			member.Name:SetText(realmInfo[iconstr]..member.Name:GetText());
+if LFGListApplicationViewer_UpdateApplicantMember then
+	hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(member, id, index)
+		if not TooltipRealmInfoDB.finder_counryflag then return end
+		local name = C_LFGList.GetApplicantMemberInfo(id, index);
+		if name then
+			local realmInfo = GetRealmInfo(GetRealmFromNameString(name));
+			if realmInfo and #realmInfo>0 then
+				member.Name:SetText(realmInfo[iconstr]..member.Name:GetText());
+			end
 		end
-	end
-end);
+	end);
+end
 
 -- premate groups
-hooksecurefunc("LFGListSearchEntry_Update",function(button)
-	if not TooltipRealmInfoDB.finder_counryflag then return end
-	local realmInfo,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
-	if searchResultInfo and searchResultInfo.leaderName then
-		realmInfo = GetRealmInfo(GetRealmFromNameString(searchResultInfo.leaderName));
-	end
-	if realmInfo and #realmInfo>0 then
-		local cur = button.Name:GetText();
-		if not cur:match(addon) then
-			button.Name:SetText(realmInfo[iconstr]..cur)
+if LFGListSearchEntry_Update then
+	hooksecurefunc("LFGListSearchEntry_Update",function(button)
+		if not TooltipRealmInfoDB.finder_counryflag then return end
+		local realmInfo,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
+		if searchResultInfo and searchResultInfo.leaderName then
+			realmInfo = GetRealmInfo(GetRealmFromNameString(searchResultInfo.leaderName));
 		end
-	end
-end)
+		if realmInfo and #realmInfo>0 then
+			local cur = button.Name:GetText();
+			if not cur:match(addon) then
+				button.Name:SetText(realmInfo[iconstr]..cur)
+			end
+		end
+	end)
+end
 
 -- ChatCountryFlags
 local CCF; CCF = {
