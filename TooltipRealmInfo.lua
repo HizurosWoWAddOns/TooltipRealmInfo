@@ -197,7 +197,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 	end
 
 	if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
-		local ttName = tt:GetName();
+		local ttName = tt and tt:GetName();
 		if ttName then
 			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realmInfo[iconstr]);
 		end
