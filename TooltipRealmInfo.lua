@@ -666,7 +666,7 @@ local function RegisterSlashCommand()
 			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
 			ns:print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 		elseif cmd=="config" then
-			LibStub("HizurosSharedTools").InterfaceOptionsFrame_OpenToCategory(addon);
+			Settings.OpenToCategory(addon)
 		else
 			ns:print(L["CmdListInfo"]);
 			for i,v in ipairs({"timezone","language","type","connectedrealms"})do
