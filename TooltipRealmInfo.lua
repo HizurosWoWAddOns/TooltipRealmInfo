@@ -196,7 +196,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		return false;
 	end
 
-	if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
+	if type(tt)~="string" and realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
 		local ttName = tt:GetName();
 		if ttName then
 			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realmInfo[iconstr]);
@@ -267,7 +267,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		end
 	end
 
-	if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
+	if type(tt)~="string" and realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
 		tt:AddLine(realmInfo[iconstr]);
 	end
 
