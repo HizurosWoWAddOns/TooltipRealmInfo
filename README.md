@@ -1,5 +1,5 @@
 # TooltipRealmInfo (WoW AddOn)
-![Build](https://github.com/HizurosWoWAddOns/TooltipRealmInfo/actions/workflows/bigwigsmods-packager.yml/badge.svg)
+![Build](https://img.shields.io/github/actions/workflow/status/HizurosWoWAddOns/TooltipRealmInfo/packager.yml?style=flat-square)
 ![Tag](https://img.shields.io/github/v/tag/HizurosWoWAddOns/TooltipRealmInfo?style=flat-square)
 ![Downloads](https://img.shields.io/github/downloads/HizurosWoWAddOns/TooltipRealmInfo/total?style=flat-square)
 ![Downloads](https://img.shields.io/github/downloads/HizurosWoWAddOns/TooltipRealmInfo/latest/total?style=flat-square)
