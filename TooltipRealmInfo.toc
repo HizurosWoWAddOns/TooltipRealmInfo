@@ -1,6 +1,4 @@
-## Interface: 110100
-## Interface-Cata: 40401
-## Interface-Classic: 11506
+## Interface: 110107
 ## Title: Tooltip RealmInfo
 ## Notes: Append realm infos to some tooltips which containing player names with realm names
 ## IconTexture: 437310
