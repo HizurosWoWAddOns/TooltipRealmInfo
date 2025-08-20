@@ -16,8 +16,26 @@ local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*) %((.*)%)"; -- SOCIAL_QUEUE
 if LOCALE_zhTW then
 	_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*)%((.*)%)";
 end
-local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13; -- LibRealmInfo:GetRealmInfo()
-local DST,locked, Code2UTC, regionFix = 0,false,{EST=-5,CST=-6,MST=-7,PST=-8,AEST=10,US=-3,BRT=-3};
+local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, utc, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13,14; -- LibRealmInfo:GetRealmInfo()
+local DST,locked, Code2UTC, regionFix = 0,false,{
+	--region: eu
+	CET=1, -- Central European Time
+
+	-- region: cn/tw
+	CNST=8, -- China Standard Time
+
+	-- region: kr
+	KST=9, -- korea standard time
+
+	-- region: us
+	AEST=10, -- Australian Eastern Standard Time
+	PST=-8, -- Pacific Standard Time
+	MST=-7, -- Mountain Standard Time
+	CST=-6, -- Central Standard Time
+	EST=-5, -- Eastern Standard Time
+	BRT=-3, -- Brazil Standard Time
+
+};
 local dbDefaults = {
 	timezone=false,
 	type=true,
@@ -162,8 +180,10 @@ local function GetRealmInfo(object)
 		else
 			realmInfo[timezone] = 9;
 		end
+	elseif realmInfo[utc] then
+		realmInfo[timezone] = realmInfo[utc];
 	else
-		realmInfo[timezone] = Code2UTC[realmInfo[timezone]] + DST;
+		realmInfo[timezone] = (Code2UTC[realmInfo[timezone]] or Code2UTC[realmInfo[timezone].."_"..realmInfo[region]] or 0) + DST;
 	end
 
 	if not realmInfo[timezone] then
