@@ -107,6 +107,12 @@ do
 	end
 end
 
+local function SafeUnitIsPlayer(unit)
+    if type(unit) ~= "string" then return false end
+    local ok, isPlayer = pcall(UnitIsPlayer, unit)
+    return ok and isPlayer
+end
+
 local function GetRealmFromNameString(str)
 	local _,realmName = strsplit("-",str,2);
 	return (realmName and strlen(realmName)>0 and realmName) or myRealm[1];
@@ -307,9 +313,11 @@ local function _OnTooltipSetUnit(self)
 			unit = mf.unit;
 		end
 	end
-	if unit and UnitIsPlayer(unit) then
-		local _,realm = UnitName(unit)
-		AddLines(self,realm or myRealm[1]); -- realm string
+	if SafeUnitIsPlayer(unit) then
+		local ok, _, realm = pcall(UnitName, unit)
+		if ok then
+			AddLines(self, realm or myRealm[1])
+		end
 	end
 end
 
