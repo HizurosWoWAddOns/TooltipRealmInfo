@@ -16,7 +16,7 @@ local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*) %((.*)%)"; -- SOCIAL_QUEUE
 if LOCALE_zhTW then
 	_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*)%((.*)%)";
 end
-local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, utc, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13,14; -- LibRealmInfo:GetRealmInfo()
+local id, name, api_name, rules, locale, battlegroup, region, timezone, connections, latin_name, latin_api_name, utc, gameClient, iconstr, iconfile = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15; -- LibRealmInfo:GetRealmInfo()
 local DST,locked, Code2UTC, regionFix = 0,false,{
 	--region: eu
 	CET=1, -- Central European Time
@@ -84,10 +84,10 @@ local isModifier,modifiers = false,{
 local tooltipLines = {
 	-- { <name of line in slash command>, <return table index from local GetRealmInfo function>, <name of line in tooltip> }
 	-- 1. and 3. value will be localized in the function AddLines() and SlashCmdList["TOOLTIPREALMINFO"]() before output
-	{"language",locale,"RlmLang"},
-	{"type",rules,"RlmType"},
-	{"timezone",timezone,"RlmTZ"},
-	{"connectedrealms",connections,"RlmConn"}
+	{"language","locale","RlmLang"},
+	{"type","rules","RlmType"},
+	{"timezone","timezone","RlmTZ"},
+	{"connectedrealms","connections","RlmConn"}
 };
 
 local myRealm = {GetRealmName(),nil};
@@ -117,8 +117,8 @@ local function GetRealmInfo(object)
 		return false;
 	end
 
-	local realmName,_ = object or "";
-	if object:match("Player%-") then -- player guid string
+	local realmName, _ = object or "";
+	if object:match("^Player%-") then -- player guid string
 		_, _, _, _, _, _, realmName = GetPlayerInfoByGUID(object);
 	elseif object and strlen(object)>0 and object:match("%-") then -- name-realm string
 		_,realmName = strsplit("-",object,2);
@@ -129,67 +129,65 @@ local function GetRealmInfo(object)
 		realmName = object or myRealm[1];
 	end
 
-	--ns:debug("TTRI","<GetRealmInfo>",object,realmName)
+	local realmInfo = LRI:GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1],regionFix,true);
 
-	local realmInfo = {LRI:GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1],regionFix)}
-
-	if #realmInfo==0 then
+	if not (realmInfo and realmInfo.id and realmInfo.name) then
 		ns:debug("<GetRealmInfo>","<NoResultFor>",object,realmName);
 		return;
 	end
 
 	-- modify locale
-	if realmInfo[region]=="EU" then
-		if realmInfo[locale]=="enUS" then
-			realmInfo[locale] = "enGB"; -- Great Britain
-		elseif realmInfo[locale]=="ptBR" then
-			realmInfo[locale] = "ptPT"
+	if realmInfo.region=="EU" then
+		if realmInfo.locale=="enUS" then
+			realmInfo.locale = "enGB"; -- Great Britain
+		elseif realmInfo.locale=="ptBR" then
+			realmInfo.locale = "ptPT"
 		end
 	end
 
 	-- add icon
-	if realmInfo[region]=="US" and realmInfo[timezone]=="AEST" then
-		realmInfo[iconfile] = media.."enAU"; -- flag of australian
+	if realmInfo.region=="US" and realmInfo.timezone=="AEST" then
+		realmInfo.iconfile = media.."enAU"; -- flag of australian
 	else
-		realmInfo[iconfile] = media..realmInfo[locale];
+		realmInfo.iconfile = media..realmInfo.locale;
 	end
-	realmInfo[iconstr] = "|T"..realmInfo[iconfile]..":0:2|t";
+	realmInfo.iconstr = "|T"..realmInfo.iconfile..":0:2|t";
 
 	-- modify rules
-	local rules_l = realmInfo[rules]:lower();
+	local rules_l = realmInfo.rules:lower();
 	if rules_l=="rp" or rules_l=="rppvp" then
-		realmInfo[rules] = "RP PvE";
+		realmInfo.rules = "RP PvE";
 	elseif rules_l=="pvp" then
-		realmInfo[rules] = "PvE";
+		realmInfo.rules = "PvE";
 	else
-		realmInfo[rules] = gsub(realmInfo[rules],"V","v");
+		realmInfo.rules = gsub(realmInfo.rules,"V","v");
 	end
 
 	-- modify timezones
-	if not realmInfo[timezone] then
-		if realmInfo[region]=="EU" then
-			if realmInfo[locale]=="enGB" or realmInfo[locale]=="ptPT" then
-				realmInfo[timezone] = 0 + DST;
+	if not realmInfo.timezone then
+		if realmInfo.region=="EU" then
+			if realmInfo.locale=="enGB" or realmInfo.locale=="ptPT" then
+				realmInfo.timezone = 0 + DST;
 			elseif locale=="ruRU" then
-				realmInfo[timezone] = 3; -- no DST
+				realmInfo.timezone = 3; -- no DST
 			else
-				realmInfo[timezone] = 1 + DST;
+				realmInfo.timezone = 1 + DST;
 			end
-		elseif realmInfo[region]=="CN" or realmInfo[region]=="TW" then
-			realmInfo[timezone] = 8;
+		elseif realmInfo.region=="CN" or realmInfo.region=="TW" then
+			realmInfo.timezone = 8;
 		else
-			realmInfo[timezone] = 9;
+			realmInfo.timezone = 9;
 		end
-	elseif realmInfo[utc] then
-		realmInfo[timezone] = realmInfo[utc];
+	elseif realmInfo.utc then
+		realmInfo.timezone = realmInfo.utc;
 	else
-		realmInfo[timezone] = (Code2UTC[realmInfo[timezone]] or Code2UTC[realmInfo[timezone].."_"..realmInfo[region]] or 0) + DST;
+		realmInfo.timezone = (Code2UTC[realmInfo.timezone] or Code2UTC[realmInfo.timezone.."_"..realmInfo.region] or 0) + DST;
 	end
 
-	if not realmInfo[timezone] then
-		realmInfo[timezone] = "Unknown";
+	if not realmInfo.timezone then
+		realmInfo.timezone = "Unknown";
 	else
-		realmInfo[timezone] = "UTC" .. ( (realmInfo[timezone]==0 and " ") or (realmInfo[timezone]<0 and "-") or "+" ) .. realmInfo[timezone];
+		realmInfo.timezone = "UTC" .. ( (realmInfo.timezone==0 and " ") or (realmInfo.timezone<0 and "-") or "+" ) .. realmInfo.timezone;
 	end
 
 	return realmInfo;
@@ -212,14 +210,14 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 
 	local realmInfo = GetRealmInfo(object);
 
-	if not (type(realmInfo)=="table" and #realmInfo>0) then
+	if not realmInfo then
 		return false;
 	end
 
-	if type(tt)~="string" and realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="charactername" then
+	if type(tt)~="string" and realmInfo.iconstr and TooltipRealmInfoDB.countryflag=="charactername" then
 		local ttName = tt:GetName();
 		if ttName then
-			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realmInfo[iconstr]);
+			_G[ttName.."TextLeft1"]:SetText(_G[ttName.."TextLeft1"]:GetText().." "..realmInfo.iconstr);
 		end
 	end
 
@@ -230,8 +228,8 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 				local lCode = realmInfo[v[2]]:upper();
 				if _G["LFG_LIST_LANGUAGE_"..lCode]~=nil or _G[lCode]~=nil then
 					text = text .. (_G["LFG_LIST_LANGUAGE_"..lCode] or _G[lCode]);
-					if realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="languageline" then
-						text = text .. realmInfo[iconstr];
+					if realmInfo.iconstr and TooltipRealmInfoDB.countryflag=="languageline" then
+						text = text .. realmInfo.iconstr;
 					end
 				else
 					text = text .. realmInfo[v[2]].."?";
@@ -239,8 +237,8 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 			elseif v[1]=="connectedrealms" then
 				local names,color = {},"ffffff";
 				if realmInfo[v[2]] and #realmInfo[v[2]]>1 then
-					for i=1,#realmInfo[v[2]] do
-						local _, realm_name = LRI:GetRealmInfoByID(realmInfo[v[2]][i],regionFix);
+					for j=1,#realmInfo[v[2]] do
+						local _, realm_name = LRI:GetRealmInfoByID(realmInfo[v[2]][j],regionFix);
 						if realm_name == myRealm[1] then
 							color="00ff00";
 						end
@@ -250,20 +248,20 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 				end
 				if type(tt)~="string" and #names>0 then
 					table.sort(names);
-					local flat = false;
+					local flat = nil;
 					if #names>4 then
 						flat = {};
 					end
-					for i,v in pairs(names) do
-						v = C(v,"ff"..color);
+					for j,V in pairs(names) do
+						V = C(V,"ff"..color);
 						if flat then
 							if title then
 								tt:AddLine(title);
 								title = nil;
 							end
-							tinsert(flat,v);
+							tinsert(flat,V);
 						else
-							tt:AddDoubleLine(title,v);
+							tt:AddDoubleLine(title,V);
 							title = " ";
 						end
 					end
@@ -287,8 +285,8 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		end
 	end
 
-	if type(tt)~="string" and realmInfo[iconstr] and TooltipRealmInfoDB.countryflag=="ownline" then
-		tt:AddLine(realmInfo[iconstr]);
+	if type(tt)~="string" and realmInfo.iconstr and TooltipRealmInfoDB.countryflag=="ownline" then
+		tt:AddLine(realmInfo.iconstr);
 	end
 
 	return tt;
@@ -296,15 +294,24 @@ end
 
 -- some gametooltip scripts/funcion hooks
 local function _OnTooltipSetUnit(self)
-	local _, unit, mf = self:GetUnit();
+
+	--if InCombatLockdown() then return end
+	local unitName, unit, unitGUID = self:GetUnit();
+	local mouseFocus
+	if HST.checkIsSecretValue_BULLSHIT(unit) then
+		-- bullshit restrictions! restriction after combats. jail the author.
+		if UnitExists("mouseover") then
+			unit = "mouseover";
+		end
+	end
 	if not unit then
 		if GetMouseFoci then
-			mf = GetMouseFoci()[1];
+			mouseFocus = GetMouseFoci()[1];
 		else
-			mf = GetMouseFocus();
+			mouseFocus = GetMouseFocus();
 		end
-		if mf and mf.unit then
-			unit = mf.unit;
+		if mouseFocus and mouseFocus.unit then
+			unit = mouseFocus.unit;
 		end
 	end
 	if unit and UnitIsPlayer(unit) then
@@ -332,8 +339,10 @@ else--if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PR
 end
 
 local function GetObjOwnerName(self)
-	local owner, owner_name = self:GetOwner();
-	if owner then
+	local owner_name;
+	local owner = self:GetOwner();
+
+	if owner and getmetatable(owner)~="Forbidden" then
 		owner_name = owner:GetName();
 		if not owner_name then
 			owner_name = owner:GetDebugName();
@@ -419,8 +428,8 @@ if LFGListApplicationViewer_UpdateApplicantMember then
 		local name = C_LFGList.GetApplicantMemberInfo(id, index);
 		if name then
 			local realmInfo = GetRealmInfo(GetRealmFromNameString(name));
-			if realmInfo and #realmInfo>0 then
-				member.Name:SetText(realmInfo[iconstr]..member.Name:GetText());
+			if realmInfo then
+				member.Name:SetText(realmInfo.iconstr..member.Name:GetText());
 			end
 		end
 	end);
@@ -434,10 +443,10 @@ if LFGListSearchEntry_Update then
 		if searchResultInfo and searchResultInfo.leaderName then
 			realmInfo = GetRealmInfo(GetRealmFromNameString(searchResultInfo.leaderName));
 		end
-		if realmInfo and #realmInfo>0 then
+		if realmInfo then
 			local cur = button.Name:GetText();
 			if not cur:match(addon) then
-				button.Name:SetText(realmInfo[iconstr]..cur)
+				button.Name:SetText(realmInfo.iconstr..cur)
 			end
 		end
 	end)
@@ -468,8 +477,8 @@ local CCF; CCF = {
 				realmInfo = GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1]);
 			end
 			-- add country flag to message
-			if realmInfo and realmInfo[iconstr] and TooltipRealmInfoDB[realmInfo[locale].."_countryflag"] then
-				args[msg] = realmInfo[iconstr].." "..args[msg];
+			if realmInfo and realmInfo.iconstr and TooltipRealmInfoDB[realmInfo.locale.."_countryflag"] then
+				args[msg] = realmInfo.iconstr.." "..args[msg];
 			end
 		end
 		return false, unpack(args);
@@ -487,8 +496,8 @@ local function CommunitiesFrame_MemberList_ScrollBox_Update(x) -- retail / df
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
 				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
-				if realmInfo and #realmInfo>0 then
-					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
+				if realmInfo then
+					buttons[i].NameFrame.Name:SetText(realmInfo.iconstr..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
 					buttons[i]:UpdateNameFrame();
 				end
@@ -508,7 +517,7 @@ local function CommunitiesFrame_MemberList_ListScrollFrame_Update() -- classic ?
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
 				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
 				if realmInfo and #realmInfo>0 then
-					buttons[i].NameFrame.Name:SetText(realmInfo[iconstr]..buttons[i].memberInfo.name);
+					buttons[i].NameFrame.Name:SetText(realmInfo.iconstr..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
 					buttons[i]:UpdateNameFrame();
 				end
@@ -687,6 +696,17 @@ local function RegisterSlashCommand()
 			ns:print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 		elseif cmd=="config" then
 			Settings.OpenToCategory(addon)
+		elseif cmd=="info" and arg and strlen(arg)>0 then
+			--
+			local info = LRI:GetRealmInfo(arg,regionFix,true)
+			if info then
+				ns:print("Result for: ",arg)
+				for k,v in pairs(info) do
+					ns:print("   "..k," = ",v)
+				end
+			else
+				ns:print("not found")
+			end
 		else
 			ns:print(L["CmdListInfo"]);
 			for i,v in ipairs({"timezone","language","type","connectedrealms"})do
@@ -694,6 +714,7 @@ local function RegisterSlashCommand()
 			end
 			ns:print("","loadedmessage","|cffffff00-",L["CmdListLoadedMsg"]);
 			ns:print("","config","|cffffff00-",L["CmdListOptions"]);
+			ns:print("","info","|cffffff00-",L["CmdListInfo1"],L["CmdListInfo2"])
 		end
 	end
 

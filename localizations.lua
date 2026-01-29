@@ -6,6 +6,9 @@ ns.L = setmetatable(L,{__index=function(t,k)
 	return v;
 end});
 
+L["CmdListInfo1"] = "Realm info.";
+L["CmdListInfo2"] = "Example: /ttri info Area 52";
+
 -- Do you want to help localize this addon?
 -- https://www.curseforge.com/wow/addons/@cf-project-name@/localization
 
