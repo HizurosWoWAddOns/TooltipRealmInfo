@@ -5,7 +5,8 @@ local L = ns.L;
 local C = WrapTextInColorCode;
 
 ns.debugMode = "@project-version@"=="@".."project-version".."@";
-LibStub("HizurosSharedTools").RegisterPrint(ns,addon,"TTRI");
+HST = LibStub("HizurosSharedTools");
+HST.RegisterPrint(ns,addon,"TTRI");
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
