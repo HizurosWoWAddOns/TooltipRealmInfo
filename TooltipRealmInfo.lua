@@ -466,7 +466,7 @@ local CCF; CCF = {
 	},
 	Register = function()
 		for event in pairs(CCF.events) do
-			ChatFrame_AddMessageEventFilter(event,CCF.Filter);
+			(ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter or ChatFrame_AddMessageEventFilter)(event,CCF.Filter);
 		end
 	end,
 	Filter = function(self,event,...)
