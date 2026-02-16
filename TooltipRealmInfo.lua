@@ -299,7 +299,7 @@ local function _OnTooltipSetUnit(self)
 	--if InCombatLockdown() then return end
 	local unitName, unit, unitGUID = self:GetUnit();
 	local mouseFocus
-	if HST.checkIsSecretValue_BULLSHIT(unit) then
+	if HST.BullShitDetector("generalTesting",unit) then
 		-- bullshit restrictions! restriction after combats. jail the author.
 		if UnitExists("mouseover") then
 			unit = "mouseover";
@@ -315,7 +315,7 @@ local function _OnTooltipSetUnit(self)
 			unit = mouseFocus.unit;
 		end
 	end
-	if unit and UnitIsPlayer(unit) then
+	if HST.BullShitDetector("UnitIsPlayer",unit) then
 		local _,realm = UnitName(unit)
 		AddLines(self,realm or myRealm[1]); -- realm string
 	end
