@@ -345,11 +345,13 @@ local function GetObjOwnerName(self)
 
 	if owner and getmetatable(owner)~="Forbidden" then
 		owner_name = owner:GetName();
-		if not owner_name then
+		if not HST.BullShitDetector("generalTesting",owner_name) then
 			owner_name = owner:GetDebugName();
 		end
 	end
-	return owner,owner_name;
+	if HST.BullShitDetector("generalTesting",owner_name) then
+		return owner,owner_name;
+	end
 end
 
 hooksecurefunc(GameTooltip,"SetText",function(self,name)
