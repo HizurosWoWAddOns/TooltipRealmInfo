@@ -299,7 +299,7 @@ local function _OnTooltipSetUnit(self)
 	--if InCombatLockdown() then return end
 	local unitName, unit, unitGUID = self:GetUnit();
 	local mouseFocus
-	if HST.BullShitDetector("generalTesting",unit) then
+	if HST.BullShitDetector("UnitIsPlayer",unit) then
 		-- bullshit restrictions! restriction after combats. jail the author.
 		if UnitExists("mouseover") then
 			unit = "mouseover";
