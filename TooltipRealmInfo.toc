@@ -1,4 +1,4 @@
-## Interface: 120001, 120000
+## Interface: 120001
 ## Title: Tooltip RealmInfo
 ## Notes: Append realm infos to some tooltips which containing player names with realm names
 ## IconTexture: 437310
