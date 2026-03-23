@@ -698,7 +698,7 @@ local function RegisterSlashCommand()
 			TooltipRealmInfoDB.loadedmessage = not TooltipRealmInfoDB.loadedmessage;
 			ns:print(L["CmdLoadedMsg"],TooltipRealmInfoDB.loadedmessage and VIDEO_OPTIONS_ENABLED or VIDEO_OPTIONS_DISABLED);
 		elseif cmd=="config" then
-			Settings.OpenToCategory(addon)
+			Settings.OpenToCategory(blizzOptPanel)
 		elseif cmd=="info" and arg and strlen(arg)>0 then
 			--
 			local info = LRI:GetRealmInfo(arg,regionFix,true)
