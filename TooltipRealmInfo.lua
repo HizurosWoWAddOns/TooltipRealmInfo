@@ -380,7 +380,7 @@ local function GetObjOwnerName(self)
 	end
 end
 
-hooksecurefunc(GameTooltip,"SetText",function(self,name)
+local function ttHookSetText(self,name)
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) then return end
 	local owner, owner_name = GetObjOwnerName(self);
 	if owner_name then
@@ -398,7 +398,13 @@ hooksecurefunc(GameTooltip,"SetText",function(self,name)
 			end
 		end
 	end
-end);
+end
+if GameTooltip.SetText then
+	hooksecurefunc(GameTooltip,"SetText",ttHookSetText)
+end
+if GameTooltip_SetTitle then
+	hooksecurefunc(_G,"GameTooltip_SetTitle",ttHookSetText)
+end
 
 hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColoredLine
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
