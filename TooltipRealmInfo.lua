@@ -3,6 +3,7 @@ TooltipRealmInfoDB = {};
 local addon, ns = ...;
 local L = ns.L;
 local C = WrapTextInColorCode;
+local issecretvalue, canaccessvalue = issecretvalue or function() return false end, canaccessvalue or function() return true end
 
 ns.debugMode = "@project-version@"=="@".."project-version".."@";
 HST = LibStub("HizurosSharedTools");
@@ -293,49 +294,74 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 	return tt;
 end
 
--- some gametooltip scripts/funcion hooks
-local function _OnTooltipSetUnit(self)
+local function IsBullshit(object)
+	return issecretvalue(object) and not canaccessvalue(object)
+end
 
-	--if InCombatLockdown() then return end
-	local unitName, unit, unitGUID = self:GetUnit();
-	local mouseFocus
-	if HST.BullShitDetector("UnitIsPlayer",unit) then
-		-- bullshit restrictions! restriction after combats. jail the author.
-		if UnitExists("mouseover") then
-			unit = "mouseover";
+local function GetUnitRealm(guid,unit,dbgStr)
+	if guid and not IsBullshit(guid) then
+		local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
+		if name and (realm=="" or realm==nil) then
+			return myRealm[1]
 		end
+		return realm
+	elseif unit and not IsBullshit(unit) and UnitIsPlayer(unit) then
+		local _, realm = UnitName(unit)
+		return realm or myRealm[1]
 	end
-	if not unit then
+end
+
+-- some gametooltip scripts/funcion hooks
+local function _OnTooltipSetUnit(self,unit)
+	if IsBullshit(self) then return end
+	local realm
+
+	if TooltipUtil and self:IsTooltipType(Enum.TooltipDataType.Unit) then
+		local ttData = self:GetPrimaryTooltipData()
+		realm = GetUnitRealm(ttData.guid,unit,"GetPrimaryTooltipData")
+	end
+
+	if self.GetUnit and not realm then
+		local _, unit, guid = self:GetUnit();
+		realm = GetUnitRealm(guid,unit,"GetUnit")
+	end
+
+	if not realm then
+		local mouseFocus
 		if GetMouseFoci then
 			mouseFocus = GetMouseFoci()[1];
 		else
 			mouseFocus = GetMouseFocus();
 		end
 		if mouseFocus and mouseFocus.unit then
-			unit = mouseFocus.unit;
+			realm = GetUnitRealm(false,mouseFocus.unit,"MouseFocus")
 		end
 	end
-	if HST.BullShitDetector("UnitIsPlayer",unit) then
-		local _,realm = UnitName(unit)
-		AddLines(self,realm or myRealm[1]); -- realm string
+
+	if not realm and UnitExists("mouseover") then
+		realm = GetUnitRealm(false,"mouseover","mouseover")
+	end
+
+	if realm then
+		AddLines(self,realm); -- realm string
 	end
 end
 
 if TooltipDataProcessor then
 	local ttDone = nil;
-	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function()
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(self,unit)
 		if ttDone==true or not TooltipRealmInfoDB.ttPlayer then return end
 		ttDone = true;
-		_OnTooltipSetUnit(GameTooltip)
+		_OnTooltipSetUnit(GameTooltip,unit)
 	end);
 
 	GameTooltip:HookScript("OnTooltipCleared", function(self)
 		ttDone = nil
 	end)
 else--if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
-	GameTooltip:HookScript("OnTooltipSetUnit",function(self,...)
+	GameTooltip:HookScript("OnTooltipSetUnit",function(self,unit)
 		if not TooltipRealmInfoDB.ttPlayer then return end
-		_OnTooltipSetUnit(self);
+		_OnTooltipSetUnit(self,unit);
 	end);
 end
 
