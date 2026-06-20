@@ -93,6 +93,11 @@ local tooltipLines = {
 	{"connectedrealms","connections","RlmConn"}
 };
 
+local function IsBullshit(object)
+	if not (issecretvalue and canaccessvalue) then return false end
+	return issecretvalue(object) and not canaccessvalue(object)
+end
+
 local myRealm = {GetRealmName(),nil};
 do
 	local pattern = "^"..(myRealm[1]:gsub("(.)","%1*")).."$";
@@ -132,10 +137,7 @@ local function GetRealmInfo(object,dbgStr)
 	if object:match("^Player%-") then -- player guid string
 		_, _, _, _, _, _, realmName = GetPlayerInfoByGUID(object);
 	elseif object and strlen(object)>0 and object:match("%-") then -- name-realm string
-		_,realmName = strsplit("-",object,2);
-		if (realmName and strlen(realmName)==0) or realmName==nil then
-			realmName = myRealm[1];
-		end
+		realmName = GetRealmFromNameString(object)
 	else
 		realmName = object or myRealm[1];
 	end
@@ -315,25 +317,24 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 	return tt;
 end
 
-local function IsBullshit(object)
-	return issecretvalue(object) and not canaccessvalue(object)
-end
-
-local function GetUnitRealm(guid,unit,dbgStr)
-	if guid and not IsBullshit(guid) then
-		local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
+local function GetUnitRealm(object,dbgStr)
+	if not (object and not IsBullshit(object)) then return end
+	object = tostring(object)
+	if object:match("Player%-") then
+		local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(object)
 		if name and (realm=="" or realm==nil) then
 			return myRealm[1]
 		end
 		return realm
-	elseif unit and not IsBullshit(unit) and UnitIsPlayer(unit) then
-		local _, realm = UnitName(unit)
+	end
+	if UnitIsPlayer(object) then
+		local _, realm = UnitName(object)
 		return realm or myRealm[1]
 	end
 end
 
 -- some gametooltip scripts/funcion hooks
-local function _OnTooltipSetUnit(self,unit)
+local function _OnTooltipSetUnit(self)
 	if IsBullshit(self) then return end
 	local realm
 
@@ -344,7 +345,10 @@ local function _OnTooltipSetUnit(self,unit)
 
 	if self.GetUnit and not realm then
 		local _, unit, guid = self:GetUnit();
-		realm = GetUnitRealm(guid,unit,"GetUnit")
+		realm = GetUnitRealm(guid,"self.GetUnit/guid")
+		if not realm then
+			realm = GetUnitRealm(unit,"self.GetUnit/unit")
+		end
 	end
 
 	if not realm then
@@ -355,12 +359,12 @@ local function _OnTooltipSetUnit(self,unit)
 			mouseFocus = GetMouseFocus();
 		end
 		if mouseFocus and mouseFocus.unit then
-			realm = GetUnitRealm(false,mouseFocus.unit,"MouseFocus")
+			realm = GetUnitRealm(mouseFocus.unit,"GetMouseFocus")
 		end
 	end
 
 	if not realm and UnitExists("mouseover") then
-		realm = GetUnitRealm(false,"mouseover","mouseover")
+		realm = GetUnitRealm("mouseover","mouseover")
 	end
 
 	if realm then
@@ -370,19 +374,19 @@ end
 
 if TooltipDataProcessor then
 	local ttDone = nil;
-	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(self,unit)
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(self)
 		if ttDone==true or not TooltipRealmInfoDB.ttPlayer then return end
 		ttDone = true;
-		_OnTooltipSetUnit(GameTooltip,unit)
+		_OnTooltipSetUnit(self)
 	end);
 
-	GameTooltip:HookScript("OnTooltipCleared", function(self)
+	GameTooltip:HookScript("OnTooltipCleared", function()
 		ttDone = nil
 	end)
 else--if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
-	GameTooltip:HookScript("OnTooltipSetUnit",function(self,unit)
+	GameTooltip:HookScript("OnTooltipSetUnit",function(self)
 		if not TooltipRealmInfoDB.ttPlayer then return end
-		_OnTooltipSetUnit(self,unit);
+		_OnTooltipSetUnit(self);
 	end);
 end
 
@@ -390,13 +394,14 @@ local function GetObjOwnerName(self)
 	local owner_name;
 	local owner = self:GetOwner();
 
-	if owner and getmetatable(owner)~="Forbidden" then
+	if owner and not IsBullshit(owner) and getmetatable(owner)~="Forbidden" then
 		owner_name = owner:GetName();
-		if not HST.BullShitDetector("generalTesting",owner_name) then
+		if not owner_name then
 			owner_name = owner:GetDebugName();
 		end
 	end
-	if HST.BullShitDetector("generalTesting",owner_name) then
+
+	if IsBullshit(owner_name) then
 		return owner,owner_name;
 	end
 end
@@ -427,7 +432,7 @@ if GameTooltip_SetTitle then
 	hooksecurefunc(_G,"GameTooltip_SetTitle",ttHookSetText)
 end
 
-hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColoredLine
+local function AddLineHook(self,text)
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
 	-- text==nil required for bug in FrameXML/LFGList.lua line 3499. [ tooltip:AddLine(activityName); ] activityName is nil.
 	local owner, owner_name = GetObjOwnerName(self);
@@ -458,7 +463,15 @@ hooksecurefunc(GameTooltip,"AddLine",function(self,text) -- GameTooltip_AddColor
 			-- do not add lines!!!
 		end
 	end
-end);
+end
+
+hooksecurefunc(GameTooltip,"AddLine",AddLineHook)
+if GameTooltip_AddNormalLine then
+	hooksecurefunc(_G,"GameTooltip_AddNormalLine",AddLineHook)
+end
+-- if GameTooltip_AddColoredLine then
+-- 	hooksecurefunc(_G,"GameTooltip_AddColoredLine",AddLineHook)
+-- end
 
 -- Friend list tooltip
 hooksecurefunc("FriendsFrameTooltip_SetLine",function(line, anchor, text, yOffset)
