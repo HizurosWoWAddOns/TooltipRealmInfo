@@ -8,6 +8,7 @@ local issecretvalue, canaccessvalue = issecretvalue or function() return false e
 ns.debugMode = "@project-version@"=="@".."project-version".."@";
 HST = LibStub("HizurosSharedTools");
 HST.RegisterPrint(ns,addon,"TTRI");
+ns.DebugPrint = function(...) ns:debug(...) ns:debugPrint(...) end
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
@@ -114,8 +115,16 @@ local function GetRealmFromNameString(str)
 	return (realmName and strlen(realmName)>0 and realmName) or myRealm[1];
 end
 
-local function GetRealmInfo(object)
+local function GetRealmInfo(object,dbgStr)
 	if not (type(object)=="string" and object:trim():len()>0) then
+		local t = type(object)
+		ns.DebugPrint(
+			"<GetRealmInfo>",
+			"<calledFrom> "..dbgStr,
+			"<invalidParam>",
+			"<paramType> "..t,
+			t=="string" and "<paramLength> "..strlen(object) or ""
+		);
 		return false;
 	end
 
@@ -132,6 +141,18 @@ local function GetRealmInfo(object)
 	end
 
 	local realmInfo = LRI:GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1],regionFix,true);
+
+	local dbgInfo = {
+		"<GetRealmInfo>",
+		"<calledFrom> "..dbgStr,
+		"<param> "..tostring(object),
+		"<extractedRealm> "..tostring(realmName),
+		"<LibAnswerType> "..type(realmInfo)
+	}
+	if realmInfo and realmInfo.id then
+		tinsert(dbgInfo,"<LibAnswerRealmId> "..realmInfo.id);
+	end
+	ns.DebugPrint(unpack(dbgInfo));
 
 	if not (realmInfo and realmInfo.id and realmInfo.name) then
 		ns:debug("<GetRealmInfo>","<NoResultFor>",object,realmName);
@@ -210,7 +231,7 @@ local function AddLines(tt,object,_title,newLineOnFlat)
 		_title = "%s: ";
 	end
 
-	local realmInfo = GetRealmInfo(object);
+	local realmInfo = GetRealmInfo(object,"AddLines");
 
 	if not realmInfo then
 		return false;
@@ -318,7 +339,7 @@ local function _OnTooltipSetUnit(self,unit)
 
 	if TooltipUtil and self:IsTooltipType(Enum.TooltipDataType.Unit) then
 		local ttData = self:GetPrimaryTooltipData()
-		realm = GetUnitRealm(ttData.guid,unit,"GetPrimaryTooltipData")
+		realm = GetUnitRealm(ttData.guid,"GetPrimaryTooltipData")
 	end
 
 	if self.GetUnit and not realm then
@@ -462,7 +483,7 @@ if LFGListApplicationViewer_UpdateApplicantMember then
 		if not TooltipRealmInfoDB.finder_counryflag then return end
 		local name = C_LFGList.GetApplicantMemberInfo(id, index);
 		if name then
-			local realmInfo = GetRealmInfo(GetRealmFromNameString(name));
+			local realmInfo = GetRealmInfo(name,"LFGListApplicationViewer_UpdateApplicantMember_Hook");
 			if realmInfo then
 				member.Name:SetText(realmInfo.iconstr..member.Name:GetText());
 			end
@@ -476,7 +497,7 @@ if LFGListSearchEntry_Update then
 		if not TooltipRealmInfoDB.finder_counryflag then return end
 		local realmInfo,searchResultInfo = nil,C_LFGList.GetSearchResultInfo(button.resultID);
 		if searchResultInfo and searchResultInfo.leaderName then
-			realmInfo = GetRealmInfo(GetRealmFromNameString(searchResultInfo.leaderName));
+			realmInfo = GetRealmInfo(searchResultInfo.leaderName,"LFGListSearchEntry_Update_Hook");
 		end
 		if realmInfo then
 			local cur = button.Name:GetText();
@@ -509,7 +530,7 @@ local CCF; CCF = {
 			-- get realmInfo from player guid
 			if args[guid] and args[guid]:find("^Player%-%d+") then
 				local _, _, _, _, _, _, realmName = GetPlayerInfoByGUID(args[guid]);
-				realmInfo = GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1]);
+				realmInfo = GetRealmInfo((realmName and strlen(realmName)>0 and realmName) or myRealm[1],"ChatFilter");
 			end
 			-- add country flag to message
 			if realmInfo and realmInfo.iconstr and TooltipRealmInfoDB[realmInfo.locale.."_countryflag"] then
@@ -530,7 +551,7 @@ local function CommunitiesFrame_MemberList_ScrollBox_Update(x) -- retail / df
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
+				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name),"CommunitiesFrame_MemberList_ScrollBox_Update");
 				if realmInfo then
 					buttons[i].NameFrame.Name:SetText(realmInfo.iconstr..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
@@ -550,7 +571,7 @@ local function CommunitiesFrame_MemberList_ListScrollFrame_Update() -- classic ?
 	if buttons and #buttons>0 then
 		for i = 1, #buttons do
 			if buttons[i].memberInfo and buttons[i].memberInfo.name then
-				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name));
+				local realmInfo = GetRealmInfo(GetRealmFromNameString(buttons[i].memberInfo.name),"CommunitiesFrame_MemberList_ListScrollFrame_Update");
 				if realmInfo and #realmInfo>0 then
 					buttons[i].NameFrame.Name:SetText(realmInfo.iconstr..buttons[i].memberInfo.name);
 					buttons[i]:UpdatePresence();
@@ -576,8 +597,18 @@ local options = {
 	set = get_set,
 	args = {
 		loadedmessage = {
-				type = "toggle", order = 0,
-				name = L["AddOnLoaded"], desc = L["AddOnLoadedDesc"].."|n|n|cff44ff44"..L["AddOnLoadedDescAlt"].."|r"
+			type = "toggle", order = 0,
+			name = L["AddOnLoaded"], desc = L["AddOnLoadedDesc"].."|n|n|cff44ff44"..L["AddOnLoadedDescAlt"].."|r"
+		},
+		debugMode = {
+			type = "toggle", order=1,
+			name = L["Debug Mode"], desc=L["Enable debug infos in chat window. Does not servive logout or reload."],
+			set = function()
+				ns.debugMode = not ns.debugMode
+			end,
+			get = function()
+				return ns.debugMode
+			end
 		},
 		tooltips = {
 			type = "group", order = 1,
