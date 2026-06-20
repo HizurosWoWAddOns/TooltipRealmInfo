@@ -3,7 +3,7 @@ TooltipRealmInfoDB = {};
 local addon, ns = ...;
 local L = ns.L;
 local C = WrapTextInColorCode;
-local issecretvalue, canaccessvalue = issecretvalue or function() return false end, canaccessvalue or function() return true end
+local issecretvalue, canaccessvalue = issecretvalue, canaccessvalue
 
 ns.debugMode = "@project-version@"=="@".."project-version".."@";
 HST = LibStub("HizurosSharedTools");
