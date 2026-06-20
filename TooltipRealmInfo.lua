@@ -480,7 +480,7 @@ if LFGListSearchEntry_Update then
 		end
 		if realmInfo then
 			local cur = button.Name:GetText();
-			if not cur:match(addon) then
+			if not (cur and cur:match(addon)) then
 				button.Name:SetText(realmInfo.iconstr..cur)
 			end
 		end
