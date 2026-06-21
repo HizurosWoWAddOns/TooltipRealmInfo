@@ -415,12 +415,12 @@ local function ttHookSetText(self,name)
 			local button = owner:GetParent();
 			if button and button.applicantID and owner.memberIdx then
 				local appName = C_LFGList.GetApplicantMemberInfo(button.applicantID, owner.memberIdx);
-				AddLines(self,GetRealmFromNameString(appName)); -- name-realm string
+				AddLines(self,appName); -- name-realm string
 			end
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") then
 			local toonName = name:match(_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT);
 			if toonName then
-				AddLines(self,GetRealmFromNameString(toonName)); -- name-realm string
+				AddLines(self,toonName); -- name-realm string
 			end
 		end
 	end
@@ -441,13 +441,13 @@ local function AddLineHook(self,text)
 			-- GroupFinder > SearchResult > Tooltip
 			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
 			if leaderName then
-				AddLines(self,GetRealmFromNameString(leaderName)); -- name-realm string
+				AddLines(self,leaderName); -- name-realm string
 			end
 		elseif owner_name:find("^CommunitiesFrame%.MemberList%.ScrollBox%.ScrollTarget") then
 			-- Communities > MemberList > Tooltip
 			if owner.memberInfo and owner.memberInfo.clubType~=0 and text==owner.memberInfo.name then
 				-- Community member list tooltips
-				AddLines(self,GetRealmFromNameString(owner.memberInfo.name),nil,true) -- name-realm string
+				AddLines(self,owner.memberInfo.name,nil,true) -- name-realm string
 			elseif owner.Info and owner.GetApplicantName and text==owner.Info.name then
 				-- Community applicant list tooltip
 				local _, _, _, _, _, _, realm = GetPlayerInfoByGUID(owner.Info.playerGUID);
@@ -457,7 +457,7 @@ local function AddLineHook(self,text)
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") and owner.entry and owner.entry.guid then
 			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
 			if leader then
-				AddLines(self,GetRealmFromNameString(leader)); -- name-realm string
+				AddLines(self,leader); -- name-realm string
 			end
 		elseif owner_name:find("^BuffFrame%.AuraContainer") then
 			-- do not add lines!!!
