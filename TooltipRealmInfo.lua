@@ -15,6 +15,7 @@ local LRI = LibStub("LibRealmInfo");
 
 local frame, media, blizzOptPanel = CreateFrame("frame"), "Interface\\AddOns\\"..addon.."\\media\\";
 local _FRIENDS_LIST_REALM, _LFG_LIST_TOOLTIP_LEADER = FRIENDS_LIST_REALM.."|r(.+)", gsub(LFG_LIST_TOOLTIP_LEADER,"%%s","(.+)");
+local _LFG_LIST_TOOLTIP_LEADER_FACTION = LFG_LIST_TOOLTIP_LEADER_FACTION:gsub("%%s","(.+)")
 local _SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*) %((.*)%)"; -- SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT:gsub("%(","%%("):gsub("%)","%%)"):gsub("%%s","(.*)");
 if LOCALE_zhTW then
 	_SOCIAL_QUEUE_COMMUNITIES_HEADER_FORMAT = "(.*)%((.*)%)";
@@ -432,6 +433,14 @@ if GameTooltip_SetTitle then
 	hooksecurefunc(_G,"GameTooltip_SetTitle",ttHookSetText)
 end
 
+local function GetLeaderName(text)
+	local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER) -- "Leader: |cffffffff%s|r"
+	if not leaderName then
+		leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER_FACTION) -- "Leader: |cffffffff%s (%s)|r"
+	end
+	return leaderName
+end
+
 local function AddLineHook(self,text)
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
 	-- text==nil required for bug in FrameXML/LFGList.lua line 3499. [ tooltip:AddLine(activityName); ] activityName is nil.
@@ -439,7 +448,7 @@ local function AddLineHook(self,text)
 	if owner_name then
 		if owner_name:find("^LFGListFrame%.SearchPanel%.ScrollBox%.ScrollTarget%.[a-z0-9]*") then
 			-- GroupFinder > SearchResult > Tooltip
-			local leaderName = text:match(_LFG_LIST_TOOLTIP_LEADER);
+			local leaderName = GetLeaderName(text)
 			if leaderName then
 				AddLines(self,leaderName); -- name-realm string
 			end
@@ -455,7 +464,7 @@ local function AddLineHook(self,text)
 				AddLines(self,realm,nil,true); -- realm string
 			end
 		elseif owner_name:find("^QuickJoinFrame%.ScrollBox%.ScrollTarget") and owner.entry and owner.entry.guid then
-			local leader = text:match(LFG_LIST_TOOLTIP_LEADER:gsub("%%s","(.*)"));
+			local leader = GetLeaderName(text)
 			if leader then
 				AddLines(self,leader); -- name-realm string
 			end
