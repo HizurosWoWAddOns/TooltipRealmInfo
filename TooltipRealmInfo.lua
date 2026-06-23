@@ -392,8 +392,12 @@ else--if WOW_PROJECT_ID==WOW_PROJECT_CATACLYSM_CLASSIC or WOW_PROJECT_ID==WOW_PR
 end
 
 local function GetObjOwnerName(self)
-	local owner_name;
-	local owner = self:GetOwner();
+	local owner_name,owner;
+	if self.GetOwner then
+		owner = self:GetOwner();
+	elseif GameTooltip:IsShown() then
+		owner = GameTooltip:GetOwner()
+	end
 
 	if owner and not IsBullshit(owner) and getmetatable(owner)~="Forbidden" then
 		owner_name = owner:GetName();
