@@ -122,6 +122,7 @@ local function GetRealmFromNameString(str)
 end
 
 local function GetRealmInfo(object,dbgStr)
+	if IsBullshit(object) then return end
 	if not (type(object)=="string" and object:trim():len()>0) then
 		local t = type(object)
 		ns.DebugPrint(
@@ -449,7 +450,7 @@ local function AddLineHook(self,text)
 	if locked or (not TooltipRealmInfoDB.ttGrpFinder) or text==nil then return end
 	-- text==nil required for bug in FrameXML/LFGList.lua line 3499. [ tooltip:AddLine(activityName); ] activityName is nil.
 	local owner, owner_name = GetObjOwnerName(self);
-	if owner_name then
+	if owner_name and not IsBullshit(owner_name) then
 		if owner_name:find("^LFGListFrame%.SearchPanel%.ScrollBox%.ScrollTarget%.[a-z0-9]*") then
 			-- GroupFinder > SearchResult > Tooltip
 			local leaderName = GetLeaderName(text)
