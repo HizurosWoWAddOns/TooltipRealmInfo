@@ -8,7 +8,7 @@ local issecretvalue, canaccessvalue = issecretvalue, canaccessvalue
 ns.debugMode = "@project-version@"=="@".."project-version".."@";
 HST = LibStub("HizurosSharedTools");
 HST.RegisterPrint(ns,addon,"TTRI");
-ns.DebugPrint = function(...) ns:debug(...) ns:debugPrint(...) end
+ns.DebugPrint = function(...) --[[ ns:debug(...) ns:debugPrint(...) ]] end
 
 -- very nice addon from Phanx :) Thanks...
 local LRI = LibStub("LibRealmInfo");
@@ -84,6 +84,14 @@ local isModifier,modifiers = false,{
 	SL = {LSHIFT=1},
 	SR = {RSHIFT=1},
 };
+local supporter = {
+	-- {<color>,<name>}, <localizations>, <donations>, <otherSupportTypes>, <special text>,
+	{"battlenet","pas06",false,"/", "curseforge","Bullseiify"},{"deDE"},false,false,false,
+	{"github","lkshrk"},false,false,false,{"githubPR"},
+	{"github","TegraGG"},false,false,false,{"githubPR"},
+	{"github","ZelionGG"},false,false,false,{"githubPR"},
+	{"curseforge","Hollicsh"},{"ruRU"},false,false,false,
+}
 
 local tooltipLines = {
 	-- { <name of line in slash command>, <return table index from local GetRealmInfo function>, <name of line in tooltip> }
@@ -102,7 +110,8 @@ end
 local myRealm = {GetRealmName(),nil};
 do
 	local pattern = "^"..(myRealm[1]:gsub("(.)","%1*")).."$";
-	for i,v in ipairs(GetAutoCompleteRealms()) do
+	local realmList = (C_AutoComplete and C_AutoComplete.GetAutoCompleteRealms or GetAutoCompleteRealms)() or {}
+	for i,v in ipairs(realmList) do
 		if v:match(pattern) then
 			myRealm[2] = v;
 			break;
@@ -758,11 +767,6 @@ local options = {
 
 			}
 		},
-		credits = {
-			type = "group", order = 200, inline = true, hidden = true,
-			name = L["Credit"],
-			args = {}
-		},
 	}
 };
 
@@ -770,7 +774,7 @@ local function RegisterOptionPanel()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(addon, options);
 	blizzOptPanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addon);
 	LibStub("HizurosSharedTools").BlizzOptions_ExpandOnShow(blizzOptPanel);
-	LibStub("HizurosSharedTools").AddCredit(addon); -- options.args.credits.args
+	LibStub("HizurosSharedTools").AddCredit(addon,options.args,{inline=true,supporter=supporter});
 end
 
 local function RegisterSlashCommand()
